@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ================= ENUMS =================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+}
+
+// ================= MODELS =================
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(255)
+  email        String    @unique @db.VarChar(255)
+  password     String    @db.VarChar(255)
+  isActive     Boolean   @default(true) @map("is_active")
+  role         UserRole  @default(ADMIN)
+  refreshToken String?   @map("refresh_token") @db.Text
+  lastLogin    DateTime? @map("last_login")
+
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("users")
+}

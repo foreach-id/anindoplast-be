@@ -1,0 +1,11 @@
+/node_modules
+/dist
+.env*
+
+
+# System files
+.DS_Store
+
+# Editor folders
+.vscode/
+.idea/

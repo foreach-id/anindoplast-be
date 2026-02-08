@@ -1,0 +1,104 @@
+### Variables
+@baseUrl = http://localhost:3000/api
+# GANTI TOKEN DI BAWAH INI SETELAH ANDA LOGIN
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJzdXBlckBhZG1pbi5jb20iLCJyb2xlIjoiU1VQRVJfQURNSU4iLCJpYXQiOjE3NzAzNzA2NTYsImV4cCI6MTc3MDQ1NzA1Nn0.3If6rrnQJ4YusiT8kEkmRcgFC7aBsqyp7Vb-cYg0N-g
+
+### ===========================================
+### 1. AUTH MODULE (Login & Token)
+### ===========================================
+
+### A. Login Super Admin (Seed Data)
+# Gunakan akun ini pertama kali (dari seed.ts)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "super@admin.com",
+  "password": "password123"
+}
+
+### B. Login Admin Biasa
+# Gunakan ini jika sudah membuat user admin baru
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin.gudang@store.com",
+  "password": "password123"
+}
+
+### C. Refresh Token
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: application/json
+
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJzdXBlckBhZG1pbi5jb20iLCJyb2xlIjoiU1VQRVJfQURNSU4iLCJpYXQiOjE3NzAzNzA2NTYsImV4cCI6MTc3MDk3NTQ1Nn0.qicL1Wgd8q5m8Spl8uJILSXwD6J2nr1f_5rLtg7cRrIi"
+}
+
+### D. Logout
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{token}}
+
+### ===========================================
+### 2. PROFILE (Self Service)
+### ===========================================
+
+### A. Cek Profile Sendiri
+GET {{baseUrl}}/users/profile
+Authorization: Bearer {{token}}
+
+### B. Update Profile Sendiri
+PATCH {{baseUrl}}/users/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Super Admin Ganteng",
+  "password": "password123"
+}
+
+### ===========================================
+### 3. USER MANAGEMENT (SUPER ADMIN ONLY)
+### ===========================================
+
+### A. Get All Users (Pagination & Search)
+GET {{baseUrl}}/users?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### B. Create New Admin (Hanya Super Admin)
+POST {{baseUrl}}/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Admin Gudang Jakarta",
+  "email": "admin.jkt@store.com",
+  "password": "password123",
+  "role": "ADMIN"
+}
+
+### C. Get Specific User Detail
+# Ganti angka 2 dengan ID user yang mau dicek
+GET {{baseUrl}}/users/2
+Authorization: Bearer {{token}}
+
+### D. Update User Lain
+# Ganti angka 2 dengan ID user target
+PATCH {{baseUrl}}/users/2
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Admin Gudang JKT (Edited)",
+  "isActive": true
+}
+
+### E. Soft Delete User (Deactivate)
+# User tidak akan bisa login lagi
+DELETE {{baseUrl}}/users/2
+Authorization: Bearer {{token}}
+
+### F. Restore User (Reactivate)
+# Mengaktifkan kembali user yang sudah dihapus
+PATCH {{baseUrl}}/users/2/restore
+Authorization: Bearer {{token}}
