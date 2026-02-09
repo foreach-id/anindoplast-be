@@ -60,8 +60,7 @@ model ServiceExpedition {
   shippingCodPercent           Int        @map("shipping_cod_percent")
   shippingCostPercent          Int        @map("shipping_cost_percent")
   shippingHandlingCostPercent  Int        @map("shipping_handling_cost_percent")
-  expeditionType               String     @map("expedition_type") @db.VarChar(255)
-  statusActive                 String     @map("status_active") @db.VarChar(50)
+  isActive                     Boolean    @default(true) @map("is_active")
 
   expeditionId                 Int?       @map("expedition_id")
   expedition                   Expedition? @relation(fields: [expeditionId], references: [id])
