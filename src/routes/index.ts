@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { authRoutes } from '@modules/auth/auth.routes';
 import { userRoutes } from '@modules/user/user.routes';
+
 import { productRoutes } from '@modules/product/product.routes';
 // import { expeditionRoutes } from '../modules/expedition/expedition.routes';
+import { expeditionRoutes } from '../modules/expedition/expedition.routes';
 // import { serviceExpeditionRoutes } from '../modules/serviceExpedition/serviceExpedition.routes';
 
 const router = Router();
@@ -10,8 +12,7 @@ const router = Router();
 // Mount routes
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
-router.use('/product', productRoutes);
-// router.use('/expedition', expeditionRoutes);
+router.use('/expedition', expeditionRoutes);
 // router.use('/service-expedition', serviceExpeditionRoutes);
 
 // API info endpoint
