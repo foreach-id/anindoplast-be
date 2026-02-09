@@ -29,6 +29,11 @@ model User {
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
+  //relasi product
+  createdProducts Product[] @relation("CreatedProducts")
+  updatedProducts Product[] @relation("UpdatedProducts")
+  deletedProducts Product[] @relation("DeletedProducts")
+
   @@map("users")
 }
 
@@ -66,4 +71,32 @@ model ServiceExpedition {
   deletedAt                    DateTime?  @map("deleted_at")
 
   @@map("service_expeditions")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  sku         String   @unique @db.VarChar(100) 
+  price       Decimal  @db.Decimal(15, 2)
+  description String?  @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+
+  weight      Int?     // Gram biasanya Integer
+  width       Float?   // Dimensi bisa koma (cm)
+  height      Float?
+  length      Float?
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  createdBy   Int      @map("created_by")
+  updatedBy   Int?     @map("updated_by")
+  deletedBy   Int?     @map("deleted_by")
+
+  creator     User     @relation("CreatedProducts", fields: [createdBy], references: [id])
+  updater     User?    @relation("UpdatedProducts", fields: [updatedBy], references: [id])
+  deleter     User?    @relation("DeletedProducts", fields: [deletedBy], references: [id])
+
+  @@map("products")
 }

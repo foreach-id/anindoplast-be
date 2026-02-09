@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { authRoutes } from '@modules/auth/auth.routes';
 import { userRoutes } from '@modules/user/user.routes';
+
+import { productRoutes } from '@modules/product/product.routes';
+// import { expeditionRoutes } from '../modules/expedition/expedition.routes';
 import { expeditionRoutes } from '../modules/expedition/expedition.routes';
 // import { serviceExpeditionRoutes } from '../modules/serviceExpedition/serviceExpedition.routes';
 
@@ -21,8 +24,9 @@ router.get('/', (_req, res) => {
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
-      expedition: '/api/expedition',
-      serviceExpedition: '/api/service-expedition',
+      product: '/api/product',
+      // expedition: '/api/expedition',
+      // serviceExpedition: '/api/service-expedition',
     },
   });
 });
