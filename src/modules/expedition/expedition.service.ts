@@ -37,12 +37,25 @@ export class ExpeditionService {
         skip: Number(skip),
         take: Number(limit),
         orderBy: { createdAt: 'desc' },
+        include: {
+          serviceExpeditions: {
+            where: {
+              deletedAt: null,
+            },
+          },
+        },
       }),
       prisma.expedition.count({ where: whereClause }),
     ]);
 
+    const transformedData = data.map((expedition) => ({
+      ...expedition,
+      services: expedition.serviceExpeditions,
+      serviceExpeditions: undefined, // Remove the original field
+    }));
+
     return {
-      data,
+      data: transformedData,
       pagination: {
         total,
         page,
@@ -58,13 +71,26 @@ export class ExpeditionService {
         id,
         deletedAt: null,
       },
+      include: {
+        serviceExpeditions: {
+          where: {
+            deletedAt: null,
+          },
+        },
+      },
     });
 
     if (!expedition) {
       throw new Error('Expedition not found');
     }
 
-    return expedition;
+    const result = {
+      ...expedition,
+      services: expedition.serviceExpeditions,
+      serviceExpeditions: undefined,
+    };
+
+    return result;
   }
 
   static async createExpedition(data: CreateExpeditionDTO) {
