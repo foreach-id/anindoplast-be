@@ -1,11 +1,11 @@
 import bcryptjs from 'bcryptjs';
 import prisma from '../../config/prisma';
-import { LoginDTO, RefreshTokenDTO } from './auth.types';
+import { LoginDTO } from './auth.types';
 import { messages } from '../../constants';
-import { TokenHelper } from '../../utils/index'; 
+import { TokenHelper } from '../../utils/index';
 
 export class AuthService {
-  
+
   static async login(data: LoginDTO) {
     // 1. Cari User berdasarkan email
     const user = await prisma.user.findUnique({
@@ -40,7 +40,7 @@ export class AuthService {
       where: { id: user.id },
       data: {
         refreshToken,
-        lastLogin: new Date(), // PERBAIKAN: Gunakan 'lastLogin' (camelCase), bukan 'last_login'
+        lastLogin: new Date(),
       },
     });
 
@@ -56,15 +56,15 @@ export class AuthService {
     };
   }
 
-  static async refreshToken(data: RefreshTokenDTO) {
+  static async refreshToken(token: string) {
     // 1. Verify token signature
-    const decoded = TokenHelper.verifyRefreshToken(data.refreshToken);
+    const decoded = TokenHelper.verifyRefreshToken(token);
 
     // 2. Cari user & cocokan token di database
     const user = await prisma.user.findFirst({
       where: {
         id: decoded.id,
-        refreshToken: data.refreshToken,
+        refreshToken: token,
       },
     });
 

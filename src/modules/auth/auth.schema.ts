@@ -8,11 +8,4 @@ export const authSchemas = {
       password: z.string().min(1, 'Password is required'),
     }),
   }),
-
-  // Schema Refresh Token
-  refreshToken: z.object({
-    body: z.object({
-      refreshToken: z.string().min(1, 'Refresh token is required'),
-    }),
-  }),
 };

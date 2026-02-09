@@ -62,13 +62,12 @@ export interface IAuthResponse {
 
 // ==================== Re-export DTOs (FIXED) ====================
 
-export type { 
-  LoginDTO, 
-  RefreshTokenDTO, 
-  AuthResponseDTO, 
-  RefreshTokenResponseDTO, 
-  CurrentUserDTO, 
-  TokenPayloadDTO 
+export type {
+  LoginDTO,
+  AuthResponseDTO,
+  RefreshTokenResponseDTO,
+  CurrentUserDTO,
+  TokenPayloadDTO
 } from '@modules/auth/auth.types';
 
 export type { 

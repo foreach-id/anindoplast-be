@@ -4,7 +4,6 @@ import { UserRole } from '@prisma/client';
 
 // --- DTO Input (dari Zod Schema) ---
 export type LoginDTO = z.infer<typeof authSchemas.login>['body'];
-export type RefreshTokenDTO = z.infer<typeof authSchemas.refreshToken>['body'];
 
 // --- Response DTOs ---
 
@@ -16,7 +15,6 @@ export interface AuthResponseDTO {
     role: string | UserRole;
   };
   accessToken: string;
-  refreshToken: string;
 }
 
 // Alias untuk kompatibilitas
@@ -24,7 +22,6 @@ export type LoginResponseDTO = AuthResponseDTO;
 
 export interface RefreshTokenResponseDTO {
   accessToken: string;
-  refreshToken: string;
 }
 
 // --- Internal / Payload DTOs ---
