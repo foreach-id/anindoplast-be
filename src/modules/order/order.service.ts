@@ -1,0 +1,351 @@
+// src/modules/order/order.service.ts
+import prisma from '../../config/prisma';
+import { Prisma } from '@prisma/client';
+import { CreateOrderDTO, UpdateOrderDTO, OrderQueryDTO } from './order.types';
+
+export class OrderService {
+  static async create(data: CreateOrderDTO, userId: number | undefined) {
+    if (typeof userId !== 'number') {
+      throw new Error('User ID is required for creating Order');
+    }
+
+    // 1. Validasi customer exists
+    const customer = await prisma.customer.findUnique({
+      where: { id: data.customerId },
+    });
+    if (!customer) throw new Error('Customer not found');
+
+    // 2. Validasi customer address
+    const customerAddress = await prisma.customerAddress.findFirst({
+      where: {
+        id: data.customerAddressId,
+        customerId: data.customerId,
+      },
+    });
+    if (!customerAddress) throw new Error('Customer address not found or does not belong to customer');
+
+    // 3. Validasi payment method
+    const paymentMethod = await prisma.paymentMethod.findFirst({
+      where: { id: data.paymentMethodId, deletedAt: null, isActive: true },
+    });
+    if (!paymentMethod) throw new Error('Payment method not found or inactive');
+
+    // 4. Validasi service expedition (jika ada)
+    if (data.serviceExpeditionId) {
+      const serviceExpedition = await prisma.serviceExpedition.findFirst({
+        where: { id: data.serviceExpeditionId, deletedAt: null, isActive: true },
+      });
+      if (!serviceExpedition) throw new Error('Service expedition not found or inactive');
+    }
+
+    // 5. Validasi products dan hitung total
+    let totalAmount = 0;
+    const itemsWithSubtotal = await Promise.all(
+      data.items.map(async (item) => {
+        const product = await prisma.product.findFirst({
+          where: { id: item.productId, deletedAt: null, isActive: true },
+        });
+
+        if (!product) {
+          throw new Error(`Product with ID ${item.productId} not found or inactive`);
+        }
+
+        const subtotal = item.quantity * item.unitPrice;
+        totalAmount += subtotal;
+
+        return {
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          subtotal,
+        };
+      })
+    );
+
+    // 6. Hitung grand total
+    const grandTotal = totalAmount + (data.shippingCost || 0);
+
+    // 7. Generate Order Number
+    const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    // 8. Create Order + OrderItems dalam 1 transaksi
+    const newOrder = await prisma.order.create({
+      data: {
+        orderNumber,
+        customerId: data.customerId,
+        customerAddressId: data.customerAddressId,
+        paymentMethodId: data.paymentMethodId,
+        serviceExpeditionId: data.serviceExpeditionId,
+        shippingCost: data.shippingCost || 0,
+        totalAmount,
+        grandTotal,
+        notes: data.notes,
+        status: 'PENDING',
+        createdBy: userId,
+        updatedBy: userId,
+
+        // Nested create OrderItems
+        orderItems: {
+          create: itemsWithSubtotal,
+        },
+      },
+      include: {
+        orderItems: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                sku: true,
+              },
+            },
+          },
+        },
+        customer: true,
+        customerAddress: true,
+        paymentMethod: true,
+        serviceExpedition: true,
+      },
+    });
+
+    return this.formatOrderResponse(newOrder);
+  }
+
+  static async getAll() {
+    const orders = await prisma.order.findMany({
+      where: { deletedAt: null },
+      include: {
+        customer: true,
+        customerAddress: true,
+        paymentMethod: true,
+        serviceExpedition: true,
+        orderItems: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                sku: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return orders.map((order) => this.formatOrderResponse(order));
+  }
+
+  static async getPaginated(query: OrderQueryDTO) {
+    // const skip = (page - 1) * limit;
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const { search, status, customerId } = query;
+    const whereClause: Prisma.OrderWhereInput = {
+      deletedAt: null,
+    };
+
+    if (search) {
+      whereClause.OR = [
+        { orderNumber: { contains: search } },
+        { customer: { name: { contains: search } } },
+        { customer: { phone: { contains: search } } },
+      ];
+    }
+
+    if (status) {
+      whereClause.status = status;
+    }
+
+    if (customerId) {
+      whereClause.customerId = customerId;
+    }
+
+    const [data, total] = await prisma.$transaction([
+      prisma.order.findMany({
+        where: whereClause,
+        skip: skip,
+        take: limit,
+        include: {
+          customer: true,
+          customerAddress: true,
+          paymentMethod: true,
+          serviceExpedition: true,
+          orderItems: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  sku: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.order.count({ where: whereClause }),
+    ]);
+
+    return {
+      data: data.map((order) => this.formatOrderResponse(order)),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  static async getById(id: number) {
+    const order = await prisma.order.findFirst({
+      where: { id, deletedAt: null },
+      include: {
+        customer: true,
+        customerAddress: true,
+        paymentMethod: true,
+        serviceExpedition: true,
+        orderItems: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                sku: true,
+                price: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    return this.formatOrderResponse(order);
+  }
+
+  static async update(id: number, data: UpdateOrderDTO, userId: number | undefined) {
+    const order = await prisma.order.findFirst({
+      where: { id, deletedAt: null },
+    });
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    // Validasi: tidak bisa update order yang sudah DELIVERED atau CANCELLED
+    if (order.status === 'DELIVERED' || order.status === 'CANCELLED') {
+      throw new Error(`Cannot update order with status ${order.status}`);
+    }
+
+    // Validasi service expedition jika ada
+    if (data.serviceExpeditionId) {
+      const serviceExpedition = await prisma.serviceExpedition.findFirst({
+        where: { id: data.serviceExpeditionId, deletedAt: null, isActive: true },
+      });
+      if (!serviceExpedition) throw new Error('Service expedition not found or inactive');
+    }
+
+    // Hitung ulang grandTotal jika shippingCost berubah
+    let grandTotal = order.grandTotal.toNumber();
+    if (data.shippingCost !== undefined) {
+      grandTotal = order.totalAmount.toNumber() + data.shippingCost;
+    }
+
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: {
+        status: data.status,
+        serviceExpeditionId: data.serviceExpeditionId,
+        shippingCost: data.shippingCost,
+        grandTotal: data.shippingCost !== undefined ? grandTotal : undefined,
+        notes: data.notes,
+        updatedBy: userId,
+        updatedAt: new Date(),
+      },
+      include: {
+        customer: true,
+        customerAddress: true,
+        paymentMethod: true,
+        serviceExpedition: true,
+        orderItems: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                sku: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return this.formatOrderResponse(updatedOrder);
+  }
+
+  static async delete(id: number, userId: number | undefined) {
+    const order = await prisma.order.findFirst({
+      where: { id, deletedAt: null },
+    });
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    // Hanya bisa delete order dengan status PENDING atau CANCELLED
+    if (order.status !== 'PENDING' && order.status !== 'CANCELLED') {
+      throw new Error(`Cannot delete order with status ${order.status}`);
+    }
+
+    await prisma.order.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        deletedBy: userId,
+      },
+    });
+
+    return { message: 'Order deleted successfully' };
+  }
+
+  private static formatOrderResponse(order: any) {
+    return {
+      id: order.id,
+      orderNumber: order.orderNumber,
+      customerId: order.customerId,
+      customerName: order.customer.name,
+      customerPhone: order.customer.phone,
+      customerAddress: order.customerAddress.address,
+      paymentMethodId: order.paymentMethodId,
+      paymentMethodName: order.paymentMethod.name,
+      serviceExpeditionId: order.serviceExpeditionId,
+      serviceExpeditionName: order.serviceExpedition?.name,
+      orderDate: order.orderDate,
+      totalAmount: order.totalAmount.toNumber(),
+      shippingCost: order.shippingCost.toNumber(),
+      grandTotal: order.grandTotal.toNumber(),
+      status: order.status,
+      notes: order.notes,
+      orderItems: order.orderItems.map((item: any) => ({
+        id: item.id,
+        productId: item.productId,
+        productName: item.product.name,
+        productSku: item.product.sku,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice.toNumber(),
+        subtotal: item.subtotal.toNumber(),
+      })),
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+    };
+  }
+}
