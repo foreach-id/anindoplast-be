@@ -1,0 +1,139 @@
+import prisma from '../../config/prisma';
+import { Prisma } from '@prisma/client';
+import { CreateCustomerDTO, UpdateCustomerDTO, CustomerQueryDTO } from './customer.types';
+
+export class CustomerService {
+  static async getAll() {
+    const customers = await prisma.customer.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return customers;
+  }
+
+  static async getPaginated(query: CustomerQueryDTO) {
+    const { page, limit, search } = query;
+    const skip = (page - 1) * limit;
+
+    const whereClause: Prisma.CustomerWhereInput = {};
+
+    if (search) {
+      whereClause.OR = [{ name: { contains: search } }];
+    }
+
+    const [data, total] = await prisma.$transaction([
+      prisma.customer.findMany({
+        where: whereClause,
+        skip: Number(skip),
+        take: Number(limit),
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.customer.count({ where: whereClause }),
+    ]);
+
+    return {
+      data: data,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  static async getById(id: number) {
+    const customer = await prisma.customer.findFirst({
+      where: {
+        id,
+      },
+    });
+
+    if (!customer) {
+      throw new Error('Customer not found');
+    }
+
+    return customer;
+  }
+
+  static async create(data: CreateCustomerDTO, userId: number | undefined) {
+    const existingCustomer = await prisma.customer.findFirst({
+      where: { phone: data.phone },
+    });
+
+    if (existingCustomer) {
+      throw new Error('Phone already exists');
+    }
+
+    if (typeof userId !== 'number') {
+      throw new Error('User ID is required for creating Customer');
+    }
+
+    const newCustomer = await prisma.customer.create({
+      data: {
+        name: data.name,
+        countryCode: data.countryCode,
+        phone: data.phone,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: userId,
+        updatedBy: userId,
+      },
+    });
+
+    let newAddress;
+    if (data.districtId && data.address) {
+      newAddress = await prisma.customerAddress.create({
+        data: {
+          customerId: newCustomer.id,
+          districtId: data.districtId,
+          address: data.address,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdBy: userId,
+          updatedBy: userId,
+        },
+      });
+    }
+
+    if (newAddress) {
+      return { ...newCustomer, address: newAddress.address, districtId: newAddress.districtId };
+    }
+
+    return newCustomer;
+  }
+
+  static async update(id: number, data: UpdateCustomerDTO, userId: number | undefined) {
+    const customer = await prisma.customer.findFirst({
+      where: {
+        id,
+      },
+    });
+
+    if (!customer) {
+      throw new Error('Customer not found');
+    }
+
+    if (data.name && data.name !== customer.name) {
+      const existingName = await prisma.customer.findFirst({
+        where: { name: data.name },
+      });
+      if (existingName) {
+        throw new Error('Name already exists');
+      }
+    }
+
+    const updatedCustomer = await prisma.customer.update({
+      where: { id },
+      data: {
+        name: data.name,
+        countryCode: data.countryCode,
+        phone: data.phone,
+        updatedAt: new Date(),
+        updatedBy: userId,
+      },
+    });
+
+    return updatedCustomer;
+  }
+}
