@@ -34,6 +34,11 @@ model User {
   updatedProducts Product[] @relation("UpdatedProducts")
   deletedProducts Product[] @relation("DeletedProducts")
 
+  //relasi payment method
+  createdPaymentMethods PaymentMethod[] @relation("CreatedPaymentMethods")
+  updatedPaymentMethods PaymentMethod[] @relation("UpdatedPaymentMethods")
+  deletedPaymentMethods PaymentMethod[] @relation("DeletedPaymentMethods")
+
   @@map("users")
 }
 
@@ -98,4 +103,24 @@ model Product {
   deleter     User?    @relation("DeletedProducts", fields: [deletedBy], references: [id])
 
   @@map("products")
+}
+
+model PaymentMethod {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  isActive    Boolean  @default(true) @map("is_active")
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  createdBy   Int      @map("created_by")
+  updatedBy   Int?     @map("updated_by")
+  deletedBy   Int?     @map("deleted_by")
+
+  creator     User     @relation("CreatedPaymentMethods", fields: [createdBy], references: [id])
+  updater     User?    @relation("UpdatedPaymentMethods", fields: [updatedBy], references: [id])
+  deleter     User?    @relation("DeletedPaymentMethods", fields: [deletedBy], references: [id])
+
+  @@map("payment_methods")
 }
