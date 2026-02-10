@@ -1,10 +1,12 @@
-import { Request, Response } from 'express';
-import { AuthService } from './auth.service';
-import { responseTemplates, statusCodes } from '../../constants';
-import { setRefreshTokenCookie, clearRefreshTokenCookie } from '../../utils/cookieHelper';
+import { Request, Response } from "express";
+import { AuthService } from "./auth.service";
+import { responseTemplates, statusCodes } from "../../constants";
+import {
+  setRefreshTokenCookie,
+  clearRefreshTokenCookie,
+} from "../../utils/cookieHelper";
 
 export class AuthController {
-
   static async login(req: Request, res: Response) {
     try {
       const result = await AuthService.login(req.body);
@@ -19,13 +21,13 @@ export class AuthController {
             user: result.user,
             accessToken: result.accessToken,
           },
-          'Login successful'
-        )
+          "Login successful",
+        ),
       );
     } catch (error: any) {
-      return res.status(statusCodes.UNAUTHORIZED).json(
-        responseTemplates.error(error.message)
-      );
+      return res
+        .status(statusCodes.BAD_REQUEST)
+        .json(responseTemplates.error(error.message));
     }
   }
 
@@ -34,9 +36,9 @@ export class AuthController {
       const token = req.cookies?.refresh_token;
 
       if (!token) {
-        return res.status(statusCodes.UNAUTHORIZED).json(
-          responseTemplates.error('Refresh token is required')
-        );
+        return res
+          .status(statusCodes.UNAUTHORIZED)
+          .json(responseTemplates.error("Refresh token is required"));
       }
 
       const result = await AuthService.refreshToken(token);
@@ -44,16 +46,18 @@ export class AuthController {
       // Set new refresh token as httpOnly cookie
       setRefreshTokenCookie(res, result.refreshToken);
 
-      return res.status(statusCodes.OK).json(
-        responseTemplates.success(
-          { accessToken: result.accessToken },
-          'Token refreshed successfully'
-        )
-      );
+      return res
+        .status(statusCodes.OK)
+        .json(
+          responseTemplates.success(
+            { accessToken: result.accessToken },
+            "Token refreshed successfully",
+          ),
+        );
     } catch (error: any) {
-      return res.status(statusCodes.UNAUTHORIZED).json(
-        responseTemplates.error(error.message)
-      );
+      return res
+        .status(statusCodes.UNAUTHORIZED)
+        .json(responseTemplates.error(error.message));
     }
   }
 
@@ -67,13 +71,13 @@ export class AuthController {
       // Clear refresh token cookie
       clearRefreshTokenCookie(res);
 
-      return res.status(statusCodes.OK).json(
-        responseTemplates.success(null, 'Logout successful')
-      );
+      return res
+        .status(statusCodes.OK)
+        .json(responseTemplates.success(null, "Logout successful"));
     } catch (error: any) {
-      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(
-        responseTemplates.error(error.message)
-      );
+      return res
+        .status(statusCodes.INTERNAL_SERVER_ERROR)
+        .json(responseTemplates.error(error.message));
     }
   }
 }
