@@ -14,6 +14,15 @@ enum UserRole {
   ADMIN
 }
 
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
 // ================= MODELS =================
 
 model User {
@@ -47,6 +56,11 @@ model User {
   createdCustomerAddress CustomerAddress[] @relation("CreatedCustomerAddress")
   updatedCustomerAddress CustomerAddress[] @relation("UpdatedCustomerAddress")
 
+  //relasi order
+  createdOrders Order[] @relation("CreatedOrders")
+  updatedOrders Order[] @relation("UpdatedOrders")
+  deletedOrders Order[] @relation("DeletedOrders")
+  
   @@map("users")
 }
 
@@ -82,6 +96,7 @@ model ServiceExpedition {
   updatedAt                    DateTime   @updatedAt @map("updated_at")
   deletedAt                    DateTime?  @map("deleted_at")
 
+  orders                       Order[]
   @@map("service_expeditions")
 }
 
@@ -110,6 +125,8 @@ model Product {
   updater     User?    @relation("UpdatedProducts", fields: [updatedBy], references: [id])
   deleter     User?    @relation("DeletedProducts", fields: [deletedBy], references: [id])
 
+  // Relasi ke OrderItem 
+  orderItems  OrderItem[]
   @@map("products")
 }
 
@@ -130,6 +147,7 @@ model PaymentMethod {
   updater     User?    @relation("UpdatedPaymentMethods", fields: [updatedBy], references: [id])
   deleter     User?    @relation("DeletedPaymentMethods", fields: [deletedBy], references: [id])
 
+  orders      Order[]
   @@map("payment_methods")
 }
 
@@ -150,6 +168,7 @@ model Customer {
   updater     User?    @relation("UpdatedCustomers", fields: [updatedBy], references: [id])
 
   customerAddresses CustomerAddress[]
+  orders       Order[]
 
   @@map("customers")
 }
@@ -171,5 +190,65 @@ model CustomerAddress {
   creator                      User     @relation("CreatedCustomerAddress", fields: [createdBy], references: [id])
   updater                      User?    @relation("UpdatedCustomerAddress", fields: [updatedBy], references: [id])
 
+  orders                       Order[]
   @@map("customer_addresses")
+}
+
+model Order {
+  id                  Int              @id @default(autoincrement())
+  orderNumber         String           @unique @db.VarChar(50) @map("order_number")
+  
+  customerId          Int              @map("customer_id")
+  customer            Customer         @relation(fields: [customerId], references: [id])
+  
+  customerAddressId   Int              @map("customer_address_id")
+  customerAddress     CustomerAddress  @relation(fields: [customerAddressId], references: [id])
+  
+  paymentMethodId     Int              @map("payment_method_id")
+  paymentMethod       PaymentMethod    @relation(fields: [paymentMethodId], references: [id])
+  
+  serviceExpeditionId Int?             @map("service_expedition_id")
+  serviceExpedition   ServiceExpedition? @relation(fields: [serviceExpeditionId], references: [id])
+  
+  orderDate           DateTime         @default(now()) @map("order_date")
+  totalAmount         Decimal          @db.Decimal(15, 2) @map("total_amount")
+  shippingCost        Decimal          @default(0) @db.Decimal(15, 2) @map("shipping_cost")
+  grandTotal          Decimal          @db.Decimal(15, 2) @map("grand_total")
+  
+  status              OrderStatus      @default(PENDING)
+  notes               String?          @db.Text
+  
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+  deletedAt           DateTime?        @map("deleted_at")
+  
+  createdBy           Int              @map("created_by")
+  updatedBy           Int?             @map("updated_by")
+  deletedBy           Int?             @map("deleted_by")
+  
+  creator             User             @relation("CreatedOrders", fields: [createdBy], references: [id])
+  updater             User?            @relation("UpdatedOrders", fields: [updatedBy], references: [id])
+  deleter             User?            @relation("DeletedOrders", fields: [deletedBy], references: [id])
+  
+  orderItems          OrderItem[]
+  
+  @@map("orders")
+}
+
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  orderId     Int      @map("order_id")
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId   Int      @map("product_id")
+  product     Product  @relation(fields: [productId], references: [id])
+  
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(15, 2) @map("unit_price")
+  subtotal    Decimal  @db.Decimal(15, 2)
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@map("order_items")
 }

@@ -6,6 +6,7 @@ import { serviceExpeditionRoutes } from '../modules/serviceExpedition/serviceExp
 import { paymentMethodRoutes } from '../modules/paymentMethod';
 import { customerRoutes } from '../modules/customer/customer.routes';
 import { customerAddressRoutes } from '../modules/customerAddress/customerAddress.routes';
+import { orderRoutes } from '../modules/order/order.routes';
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.use('/service_expedition', serviceExpeditionRoutes);
 router.use('/payment_method', paymentMethodRoutes);
 router.use('/customer', customerRoutes);
 router.use('/customer_address', customerAddressRoutes);
+router.use('/order', orderRoutes);
 
 // API info endpoint
 router.get('/', (_req, res) => {
@@ -33,6 +35,7 @@ router.get('/', (_req, res) => {
       paymentMethod: '/api/payment_method',
       customer: '/api/customer',
       customerAddress: '/api/customer_address',
+      orderRoutes: '/api/order',
     },
   });
 });
