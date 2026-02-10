@@ -1,46 +1,25 @@
 import { Router } from 'express';
-import * as productController from './product.controller';
-import { validate as validateRequest } from '@middleware/validateRequest'; 
-import AuthMiddleware from '@middleware/authMiddleware'; 
-import { 
-  createProductSchema, 
-  updateProductSchema, 
-  productQuerySchema,
-  productIdSchema  
-} from './product.schema';
+import { ProductController } from './product.controller';
+import AuthMiddleware from '../../middleware/authMiddleware';
+import { validate } from '../../middleware/validateRequest';
+import { productSchemas } from './product.schema';
+import { UserRole } from '@prisma/client';
 
 const router = Router();
 
 router.use(AuthMiddleware.authenticate);
+router.use(AuthMiddleware.authorize([UserRole.SUPER_ADMIN, UserRole.ADMIN]));
 
-router.post(
-  '/', 
-  validateRequest(createProductSchema), 
-  productController.create
-);
+router.get('/all', ProductController.getAll);
 
-router.get(
-  '/', 
-  validateRequest(productQuerySchema), 
-  productController.findAll
-);
+router.get('/paginated', validate(productSchemas.queryParams), ProductController.getPaginated);
 
-router.get(
-  '/:id', 
-  validateRequest(productIdSchema),  
-  productController.findOne
-);
+router.get('/detail/:id', validate(productSchemas.idParam), ProductController.getById);
 
-router.put(
-  '/:id', 
-  validateRequest(updateProductSchema), 
-  productController.update
-);
+router.post('/create', validate(productSchemas.create), ProductController.create);
 
-router.delete(
-  '/:id', 
-  validateRequest(productIdSchema),  
-  productController.remove
-);
+router.patch('/update/:id', validate(productSchemas.update), ProductController.update);
+
+router.delete('/delete/:id', validate(productSchemas.idParam), ProductController.delete);
 
 export const productRoutes = router;

@@ -1,91 +1,69 @@
-import { Request, Response, NextFunction } from 'express';
-import * as productService from './product.service';
-import ResponseHandler from '@utils/responseHandler';
-import { CreateProductInput, ProductQueryInput, UpdateProductInput } from './product.schema';
-import { messages } from '../../constants';
+import { Request, Response } from 'express';
+import { ProductService } from './product.service';
+import { responseTemplates, statusCodes } from '../../constants';
+import { ProductQueryDTO } from './product.types';
 
-// Helper untuk extract User ID
-const getUserId = (req: Request): number => {
-  // @ts-ignore
-  return req.user?.id; 
-};
-
-export const create = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const userId = getUserId(req);
-    const result = await productService.createProduct(req.body as CreateProductInput, userId);
-    ResponseHandler.created(res, result, 'Product created successfully');
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const findAll = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const query = req.query as unknown as ProductQueryInput;
-    const { data, meta } = await productService.getProducts(query);
-
-    ResponseHandler.paginated(
-      res, 
-      data, 
-      meta.page, 
-      meta.limit, 
-      meta.total, 
-      'Products retrieved successfully'
-    );
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const findOne = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const id = parseInt(req.params.id as string);
-    const result = await productService.getProductById(id);
-
-    if (!result) {
-        ResponseHandler.notFound(res, messages.ERROR.NOT_FOUND);
-        return; 
+export class ProductController {
+  static async getAll(_req: Request, res: Response) {
+    try {
+      const result = await ProductService.getAll();
+      return res.status(statusCodes.OK).json(responseTemplates.success(result, 'All products retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(responseTemplates.error(message));
     }
-
-    ResponseHandler.success(res, result, 'Product retrieved successfully');
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Product not found') {
-      ResponseHandler.notFound(res, error.message);
-      return;
-    }
-    next(error);
   }
-};
 
-export const update = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const id = parseInt(req.params.id as string);
-    const userId = getUserId(req);
-    const result = await productService.updateProduct(id, req.body as UpdateProductInput, userId);
-    
-    ResponseHandler.success(res, result, 'Product updated successfully');
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Product not found') {
-      ResponseHandler.notFound(res, error.message);
-      return;
+  static async getPaginated(req: Request, res: Response) {
+    try {
+      const result = await ProductService.getPaginated(req.query as unknown as ProductQueryDTO);
+      return res.status(statusCodes.OK).json(responseTemplates.success(result, 'Products retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(responseTemplates.error(message));
     }
-    next(error);
   }
-};
 
-export const remove = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const id = parseInt(req.params.id as string);
-    const userId = getUserId(req);
-    await productService.deleteProduct(id, userId);
-    
-    ResponseHandler.success(res, null, 'Product deleted successfully');
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Product not found') {
-      ResponseHandler.notFound(res, error.message);
-      return;
+  static async getById(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const result = await ProductService.getById(Number(id));
+      return res.status(statusCodes.OK).json(responseTemplates.success(result, 'Product retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.NOT_FOUND).json(responseTemplates.error(message));
     }
-    next(error);
   }
-};
+
+  static async create(req: Request, res: Response) {
+    try {
+      const result = await ProductService.create(req.body, req.user?.id);
+      return res.status(statusCodes.CREATED).json(responseTemplates.success(result, 'Product created successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.BAD_REQUEST).json(responseTemplates.error(message));
+    }
+  }
+
+  static async update(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const result = await ProductService.update(Number(id), req.body, req.user?.id);
+      return res.status(statusCodes.OK).json(responseTemplates.success(result, 'Product updated successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.BAD_REQUEST).json(responseTemplates.error(message));
+    }
+  }
+
+  static async delete(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const result = await ProductService.delete(Number(id), req.user?.id);
+      return res.status(statusCodes.OK).json(responseTemplates.success(result, 'Product deleted successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.BAD_REQUEST).json(responseTemplates.error(message));
+    }
+  }
+}
