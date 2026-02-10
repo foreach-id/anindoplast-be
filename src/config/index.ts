@@ -29,6 +29,14 @@ interface ICorsConfig {
     credentials: boolean;
 }
 
+interface ICookieConfig {
+    httpOnly: boolean;
+    secure: boolean;
+    sameSite: 'strict' | 'lax' | 'none';
+    maxAge: number;
+    path: string;
+}
+
 interface IBcryptConfig {
     saltRounds: number;
 }
@@ -39,6 +47,7 @@ interface IConfig {
     jwt: IJwtConfig;
     cors: ICorsConfig;
     bcrypt: IBcryptConfig;
+    cookie: ICookieConfig;
 }
 
 const config: IConfig = {
@@ -76,6 +85,15 @@ const config: IConfig = {
     // Bcrypt configuration
     bcrypt: {
         saltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10)
+    },
+
+    // Cookie configuration (for refresh token)
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+        path: '/api/auth',
     }
 };
 

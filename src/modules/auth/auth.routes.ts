@@ -13,10 +13,9 @@ router.post(
   AuthController.login
 );
 
-// Endpoint Refresh Token
+// Endpoint Refresh Token (token dibaca dari httpOnly cookie)
 router.post(
   '/refresh-token',
-  validate(authSchemas.refreshToken),
   AuthController.refreshToken
 );
 

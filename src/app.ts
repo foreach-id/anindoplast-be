@@ -1,5 +1,6 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import config from '@config/index';
 import { ErrorHandler, RequestLogger } from '@middleware/index';
 import apiRoutes from './routes/index';
@@ -13,6 +14,9 @@ app.set('trust proxy', 1);
 // Body parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Cookie parser
+app.use(cookieParser());
 
 // CORS configuration
 app.use(
