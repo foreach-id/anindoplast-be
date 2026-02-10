@@ -4,6 +4,8 @@ import { userRoutes } from '@modules/user/user.routes';
 import { expeditionRoutes } from '../modules/expedition/expedition.routes';
 import { serviceExpeditionRoutes } from '../modules/serviceExpedition/serviceExpedition.routes';
 import { paymentMethodRoutes } from '../modules/paymentMethod';
+import { customerRoutes } from '../modules/customer/customer.routes';
+import { customerAddressRoutes } from '../modules/customerAddress/customerAddress.routes';
 
 const router = Router();
 
@@ -13,6 +15,8 @@ router.use('/users', userRoutes);
 router.use('/expedition', expeditionRoutes);
 router.use('/service_expedition', serviceExpeditionRoutes);
 router.use('/payment_method', paymentMethodRoutes);
+router.use('/customer', customerRoutes);
+router.use('/customer_address', customerAddressRoutes);
 
 // API info endpoint
 router.get('/', (_req, res) => {
@@ -27,6 +31,8 @@ router.get('/', (_req, res) => {
       expedition: '/api/expedition',
       serviceExpedition: '/api/service_expedition',
       paymentMethod: '/api/payment_method',
+      customer: '/api/customer',
+      customerAddress: '/api/customer_address',
     },
   });
 });

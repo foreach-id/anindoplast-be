@@ -39,6 +39,14 @@ model User {
   updatedPaymentMethods PaymentMethod[] @relation("UpdatedPaymentMethods")
   deletedPaymentMethods PaymentMethod[] @relation("DeletedPaymentMethods")
 
+  //relasi customer
+  createdCustomers Customer[] @relation("CreatedCustomers")
+  updatedCustomers Customer[] @relation("UpdatedCustomers")
+
+  //relasi customer address
+  createdCustomerAddress CustomerAddress[] @relation("CreatedCustomerAddress")
+  updatedCustomerAddress CustomerAddress[] @relation("UpdatedCustomerAddress")
+
   @@map("users")
 }
 
@@ -123,4 +131,45 @@ model PaymentMethod {
   deleter     User?    @relation("DeletedPaymentMethods", fields: [deletedBy], references: [id])
 
   @@map("payment_methods")
+}
+
+
+model Customer {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(255)
+  countryCode  String    @map("country_code") @db.VarChar(10)
+  phone        String    @db.VarChar(20)
+
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  createdBy   Int      @map("created_by")
+  updatedBy   Int?     @map("updated_by")
+
+  creator     User     @relation("CreatedCustomers", fields: [createdBy], references: [id])
+  updater     User?    @relation("UpdatedCustomers", fields: [updatedBy], references: [id])
+
+  customerAddresses CustomerAddress[]
+
+  @@map("customers")
+}
+
+model CustomerAddress {
+  id                           Int        @id @default(autoincrement())
+  address                      String     @db.VarChar(255)
+  districtId                   Int        @map("district_id")
+
+  customerId                   Int        @map("customer_id")
+  customer                     Customer   @relation(fields: [customerId], references: [id])
+
+  createdAt                    DateTime   @default(now()) @map("created_at")
+  updatedAt                    DateTime   @updatedAt @map("updated_at")
+
+  createdBy                    Int      @map("created_by")
+  updatedBy                    Int?     @map("updated_by")
+
+  creator                      User     @relation("CreatedCustomerAddress", fields: [createdBy], references: [id])
+  updater                      User?    @relation("UpdatedCustomerAddress", fields: [updatedBy], references: [id])
+
+  @@map("customer_addresses")
 }
