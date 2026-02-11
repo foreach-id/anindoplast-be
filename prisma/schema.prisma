@@ -197,6 +197,7 @@ model CustomerAddress {
 model Order {
   id                  Int              @id @default(autoincrement())
   orderNumber         String           @unique @db.VarChar(50) @map("order_number")
+  deliveryNumber      String?          @unique @db.VarChar(50) @map("delivery_number")
   
   customerId          Int              @map("customer_id")
   customer            Customer         @relation(fields: [customerId], references: [id])
