@@ -4,6 +4,15 @@ import { Prisma } from '@prisma/client';
 import { CreateOrderDTO, UpdateOrderDTO, OrderQueryDTO } from './order.types';
 
 export class OrderService {
+  // Helper function untuk generate delivery number
+  private static generateDeliveryNumber(): string {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, '0');
+    return `JX${timestamp}${random}`;
+  }
+
   static async create(data: CreateOrderDTO, userId: number | undefined) {
     if (typeof userId !== 'number') {
       throw new Error('User ID is required for creating Order');
@@ -59,19 +68,21 @@ export class OrderService {
           unitPrice: item.unitPrice,
           subtotal,
         };
-      })
+      }),
     );
 
     // 6. Hitung grand total
     const grandTotal = totalAmount + (data.shippingCost || 0);
 
-    // 7. Generate Order Number
-    const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    // 7. Generate Order Number dan Delivery Number
+    const orderNumber = `AMP${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    const deliveryNumber = this.generateDeliveryNumber();
 
     // 8. Create Order + OrderItems dalam 1 transaksi
     const newOrder = await prisma.order.create({
       data: {
         orderNumber,
+        deliveryNumber,
         customerId: data.customerId,
         customerAddressId: data.customerAddressId,
         paymentMethodId: data.paymentMethodId,
@@ -148,11 +159,7 @@ export class OrderService {
     };
 
     if (search) {
-      whereClause.OR = [
-        { orderNumber: { contains: search } },
-        { customer: { name: { contains: search } } },
-        { customer: { phone: { contains: search } } },
-      ];
+      whereClause.OR = [{ orderNumber: { contains: search } }, { customer: { name: { contains: search } } }, { customer: { phone: { contains: search } } }];
     }
 
     if (status) {
@@ -259,9 +266,13 @@ export class OrderService {
       grandTotal = order.totalAmount.toNumber() + data.shippingCost;
     }
 
+    // Generate delivery number baru jika belum ada
+    const deliveryNumber = order.deliveryNumber || this.generateDeliveryNumber();
+
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: {
+        deliveryNumber,
         status: data.status,
         serviceExpeditionId: data.serviceExpeditionId,
         shippingCost: data.shippingCost,
@@ -321,6 +332,7 @@ export class OrderService {
     return {
       id: order.id,
       orderNumber: order.orderNumber,
+      deliveryNumber: order.deliveryNumber,
       customerId: order.customerId,
       customerName: order.customer.name,
       customerPhone: order.customer.phone,
