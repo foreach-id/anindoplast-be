@@ -1,5 +1,5 @@
-export { PaymentMethodController } from './customerAddress.controller';
-export { PaymentMethodService } from './customerAddress.service';
-export { paymentMethodRoutes } from './customerAddress.routes';
-export { paymentMethodSchemas } from './customerAddress.schema';
+export { CustomerAddressController } from './customerAddress.controller';
+export { CustomerAddressService } from './customerAddress.service';
+export { customerAddressRoutes } from './customerAddress.routes';
+export { customerAddressSchemas } from './customerAddress.schema';
 export * from './customerAddress.types';
