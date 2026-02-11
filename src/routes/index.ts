@@ -7,6 +7,7 @@ import { paymentMethodRoutes } from '../modules/paymentMethod';
 import { customerRoutes } from '../modules/customer/customer.routes';
 import { customerAddressRoutes } from '../modules/customerAddress/customerAddress.routes';
 import { orderRoutes } from '../modules/order/order.routes';
+import { receiptRoutes } from '../modules/receipt/receipt.route';
 import { productRoutes } from '../modules/product/product.routes';
 
 const router = Router();
@@ -21,6 +22,7 @@ router.use('/customer', customerRoutes);
 router.use('/customer_address', customerAddressRoutes);
 router.use('/product', productRoutes);
 router.use('/order', orderRoutes);
+router.use('/generate', receiptRoutes);
 
 // API info endpoint
 router.get('/', (_req, res) => {
