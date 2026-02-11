@@ -1,5 +1,5 @@
-export { default as UserController } from './expedition.controller';
-export { default as UserService } from './expedition.service';
-export { default as userRoutes } from './expedition.routes';
-export { userSchemas } from './expedition.schema';
+export { ExpeditionController } from './expedition.controller';
+export { ExpeditionService } from './expedition.service';
+export { expeditionRoutes } from './expedition.routes';
+export { expeditionSchemas } from './expedition.schema';
 export * from './expedition.types';
