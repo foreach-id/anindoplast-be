@@ -7,6 +7,7 @@ import { paymentMethodRoutes } from '../modules/paymentMethod';
 import { customerRoutes } from '../modules/customer/customer.routes';
 import { customerAddressRoutes } from '../modules/customerAddress/customerAddress.routes';
 import { orderRoutes } from '../modules/order/order.routes';
+import { productRoutes } from '../modules/product/product.routes';
 
 const router = Router();
 
@@ -18,6 +19,7 @@ router.use('/service_expedition', serviceExpeditionRoutes);
 router.use('/payment_method', paymentMethodRoutes);
 router.use('/customer', customerRoutes);
 router.use('/customer_address', customerAddressRoutes);
+router.use('/product', productRoutes);
 router.use('/order', orderRoutes);
 
 // API info endpoint
