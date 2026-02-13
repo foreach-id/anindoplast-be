@@ -1,11 +1,9 @@
-import { renderToBuffer } from '@react-pdf/renderer';
 import QRCode from 'qrcode';
 import bwipjs from 'bwip-js';
 import fs from 'fs';
 import path from 'path';
 import prisma from '../../config/prisma';
 import { ReceiptData } from './receipt.types';
-import { createReceiptDocument } from './ReceiptDocument';
 
 export class ReceiptService {
   static async getOrderData(deliveryNumbers: string[]): Promise<ReceiptData[]> {
@@ -65,8 +63,8 @@ export class ReceiptService {
 
   static async generatePDF(dataArray: ReceiptData[]): Promise<Buffer[]> {
     try {
-      // const { renderToBuffer } = await import('@react-pdf/renderer');
-      // const { createReceiptDocument } = await import('./ReceiptDocument');
+      const { renderToBuffer } = await import('@react-pdf/renderer');
+      const { createReceiptDocument } = await import('./ReceiptDocument');
       const buffers: Buffer[] = [];
       for (const data of dataArray) {
         const barcodeDataUrl = await this.generateBarcodeDataUrl(data.deliveryNumber);
