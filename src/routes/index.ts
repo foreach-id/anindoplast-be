@@ -9,6 +9,7 @@ import { customerAddressRoutes } from '../modules/customerAddress/customerAddres
 import { orderRoutes } from '../modules/order/order.routes';
 import { receiptRoutes } from '../modules/receipt/receipt.route';
 import { productRoutes } from '../modules/product/product.routes';
+import { statsRoutes } from '../modules/stats';
 
 const router = Router();
 
@@ -23,6 +24,7 @@ router.use('/customer_address', customerAddressRoutes);
 router.use('/product', productRoutes);
 router.use('/order', orderRoutes);
 router.use('/generate', receiptRoutes);
+router.use('/stats', statsRoutes)
 
 // API info endpoint
 router.get('/', (_req, res) => {
