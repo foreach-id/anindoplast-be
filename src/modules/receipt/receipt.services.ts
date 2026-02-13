@@ -65,6 +65,8 @@ export class ReceiptService {
 
   static async generatePDF(dataArray: ReceiptData[]): Promise<Buffer[]> {
     try {
+      // const { renderToBuffer } = await import('@react-pdf/renderer');
+      // const { createReceiptDocument } = await import('./ReceiptDocument');
       const buffers: Buffer[] = [];
       for (const data of dataArray) {
         const barcodeDataUrl = await this.generateBarcodeDataUrl(data.deliveryNumber);
