@@ -5,8 +5,8 @@ import { responseTemplates, statusCodes } from '../../constants';
 export class ServiceExpeditionController {
   static async getAll(req: Request, res: Response) {
     try {
-      const expeditionId = req.query.expeditionId ? Number(req.query.expeditionId) : undefined;
-      const result = await ServiceExpeditionService.getAll(expeditionId);
+      const expeditionId = req.params.id
+      const result = await ServiceExpeditionService.getAll(Number(expeditionId));
       return res.status(statusCodes.OK).json(responseTemplates.success(result, 'Service expeditions retrieved successfully'));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An error occurred';
