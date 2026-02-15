@@ -20,6 +20,14 @@ export interface OrderItemDTO {
   subtotal: number;
 }
 
+// TAMBAHKAN: Interface untuk item input
+export interface OrderItemInput {
+  id?: number; // Optional: untuk update
+  productId: number;
+  quantity: number;
+  unitPrice: number;
+}
+
 export interface OrderResponseDTO {
   id: number;
   orderNumber: string;
@@ -31,6 +39,8 @@ export interface OrderResponseDTO {
   paymentMethodName: string;
   serviceExpeditionId?: number;
   serviceExpeditionName?: string;
+  expeditionId?: number;
+  expeditionName?: string;
   orderDate: Date;
   totalAmount: number;
   shippingCost: number;

@@ -26,10 +26,21 @@ export const orderSchemas = {
       id: z.string().transform((val) => parseInt(val, 10)),
     }),
     body: z.object({
-      status: z.enum(['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']).optional(),
+      customerId: z.number().int().min(1, 'Customer is required').optional(),
+      customerAddressId: z.number().int().min(1, 'Customer address is required').optional(),
+      paymentMethodId: z.number().int().min(1, 'Payment method is required').optional(),
       serviceExpeditionId: z.number().int().optional(),
       shippingCost: z.number().min(0).optional(),
       notes: z.string().optional(),
+      status: z.enum(['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']).optional(),
+      items: z.array(
+        z.object({
+          id: z.number().int().optional(), // Jika ada ID = update, jika tidak = create
+          productId: z.number().int().min(1, 'Product ID is required'),
+          quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+          unitPrice: z.number().min(0, 'Unit price cannot be negative'),
+        })
+      ).optional(), // Optional: jika tidak kirim items = tidak update items
     }),
   }),
 

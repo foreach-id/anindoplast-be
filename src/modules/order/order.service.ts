@@ -115,7 +115,11 @@ export class OrderService {
         customer: true,
         customerAddress: true,
         paymentMethod: true,
-        serviceExpedition: true,
+        serviceExpedition: {
+          include: {
+            expedition: true,
+          }
+        },
       },
     });
 
@@ -129,7 +133,11 @@ export class OrderService {
         customer: true,
         customerAddress: true,
         paymentMethod: true,
-        serviceExpedition: true,
+        serviceExpedition: {
+          include: {
+            expedition: true,
+          }
+        },
         orderItems: {
           include: {
             product: {
@@ -179,7 +187,11 @@ export class OrderService {
           customer: true,
           customerAddress: true,
           paymentMethod: true,
-          serviceExpedition: true,
+          serviceExpedition: {
+            include: {
+              expedition: true,
+            }
+          },
           orderItems: {
             include: {
               product: {
@@ -215,7 +227,11 @@ export class OrderService {
         customer: true,
         customerAddress: true,
         paymentMethod: true,
-        serviceExpedition: true,
+        serviceExpedition: {
+          include:{
+            expedition: true,
+          }
+        },
         orderItems: {
           include: {
             product: {
@@ -238,21 +254,48 @@ export class OrderService {
     return this.formatOrderResponse(order);
   }
 
+
   static async update(id: number, data: UpdateOrderDTO, userId: number | undefined) {
+    // 1. Cek order exists
     const order = await prisma.order.findFirst({
       where: { id, deletedAt: null },
+      include: {
+        orderItems: true, // Include existing items
+      },
     });
 
     if (!order) {
       throw new Error('Order not found');
     }
 
-    // Validasi: tidak bisa update order yang sudah DELIVERED atau CANCELLED
-    if (order.status === 'DELIVERED' || order.status === 'CANCELLED') {
-      throw new Error(`Cannot update order with status ${order.status}`);
+    // 2. Validasi customer jika diubah
+    if (data.customerId && data.customerId !== order.customerId) {
+      const customer = await prisma.customer.findUnique({
+        where: { id: data.customerId },
+      });
+      if (!customer) throw new Error('Customer not found');
     }
 
-    // Validasi service expedition jika ada
+    // 3. Validasi customer address jika diubah
+    if (data.customerAddressId && data.customerAddressId !== order.customerAddressId) {
+      const customerAddress = await prisma.customerAddress.findFirst({
+        where: {
+          id: data.customerAddressId,
+          customerId: data.customerId || order.customerId,
+        },
+      });
+      if (!customerAddress) throw new Error('Customer address not found or does not belong to customer');
+    }
+
+    // 4. Validasi payment method jika diubah
+    if (data.paymentMethodId && data.paymentMethodId !== order.paymentMethodId) {
+      const paymentMethod = await prisma.paymentMethod.findFirst({
+        where: { id: data.paymentMethodId, deletedAt: null, isActive: true },
+      });
+      if (!paymentMethod) throw new Error('Payment method not found or inactive');
+    }
+
+    // 5. Validasi service expedition jika diubah
     if (data.serviceExpeditionId) {
       const serviceExpedition = await prisma.serviceExpedition.findFirst({
         where: { id: data.serviceExpeditionId, deletedAt: null, isActive: true },
@@ -260,45 +303,136 @@ export class OrderService {
       if (!serviceExpedition) throw new Error('Service expedition not found or inactive');
     }
 
-    // Hitung ulang grandTotal jika shippingCost berubah
-    let grandTotal = order.grandTotal.toNumber();
-    if (data.shippingCost !== undefined) {
-      grandTotal = order.totalAmount.toNumber() + data.shippingCost;
+    // 6. Handle Items Update (jika ada)
+    let totalAmount = order.totalAmount.toNumber();
+    let itemsOperations = [];
+
+    if (data.items && data.items.length > 0) {
+      // Validasi semua products
+      const itemsWithSubtotal = await Promise.all(
+        data.items.map(async (item) => {
+          const product = await prisma.product.findFirst({
+            where: { id: item.productId, deletedAt: null, isActive: true },
+          });
+
+          if (!product) {
+            throw new Error(`Product with ID ${item.productId} not found or inactive`);
+          }
+
+          const subtotal = item.quantity * item.unitPrice;
+
+          return {
+            id: item.id, // Jika ada = update, jika tidak = create
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            subtotal,
+          };
+        }),
+      );
+
+      // Hitung total baru
+      totalAmount = itemsWithSubtotal.reduce((sum, item) => sum + item.subtotal, 0);
+
+      // Prepare operations untuk items
+      // 1. Delete items yang tidak ada di input baru
+      const newItemIds = itemsWithSubtotal.filter(i => i.id).map(i => i.id);
+      const itemsToDelete = order.orderItems.filter(
+        (existingItem) => !newItemIds.includes(existingItem.id)
+      );
+
+      if (itemsToDelete.length > 0) {
+        itemsOperations.push(
+          prisma.orderItem.deleteMany({
+            where: {
+              id: { in: itemsToDelete.map(i => i.id) },
+            },
+          })
+        );
+      }
+
+      // 2. Update atau Create items
+      itemsWithSubtotal.forEach((item) => {
+        if (item.id) {
+          // Update existing item
+          itemsOperations.push(
+            prisma.orderItem.update({
+              where: { id: item.id },
+              data: {
+                productId: item.productId,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                subtotal: item.subtotal,
+                updatedAt: new Date(),
+              },
+            })
+          );
+        } else {
+          // Create new item
+          itemsOperations.push(
+            prisma.orderItem.create({
+              data: {
+                orderId: id,
+                productId: item.productId,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                subtotal: item.subtotal,
+              },
+            })
+          );
+        }
+      });
     }
 
-    // Generate delivery number baru jika belum ada
+    // 7. Hitung grand total baru
+    const shippingCost = data.shippingCost !== undefined ? data.shippingCost : order.shippingCost.toNumber();
+    const grandTotal = totalAmount + shippingCost;
+
+    // 8. Generate delivery number jika belum ada
     const deliveryNumber = order.deliveryNumber || this.generateDeliveryNumber();
 
-    const updatedOrder = await prisma.order.update({
-      where: { id },
-      data: {
-        deliveryNumber,
-        status: data.status,
-        serviceExpeditionId: data.serviceExpeditionId,
-        shippingCost: data.shippingCost,
-        grandTotal: data.shippingCost !== undefined ? grandTotal : undefined,
-        notes: data.notes,
-        updatedBy: userId,
-        updatedAt: new Date(),
-      },
-      include: {
-        customer: true,
-        customerAddress: true,
-        paymentMethod: true,
-        serviceExpedition: true,
-        orderItems: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                sku: true,
+    // 9. Execute transaction untuk update order dan items
+    const [updatedOrder] = await prisma.$transaction([
+      prisma.order.update({
+        where: { id },
+        data: {
+          deliveryNumber,
+          customerId: data.customerId,
+          customerAddressId: data.customerAddressId,
+          paymentMethodId: data.paymentMethodId,
+          serviceExpeditionId: data.serviceExpeditionId,
+          shippingCost: shippingCost,
+          totalAmount: data.items ? totalAmount : undefined, // Update total jika items berubah
+          grandTotal: data.items || data.shippingCost !== undefined ? grandTotal : undefined,
+          status: data.status,
+          notes: data.notes,
+          updatedBy: userId,
+          updatedAt: new Date(),
+        },
+        include: {
+          customer: true,
+          customerAddress: true,
+          paymentMethod: true,
+          serviceExpedition: {
+            include: {
+              expedition: true,
+            },
+          },
+          orderItems: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  sku: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      }),
+      ...itemsOperations, 
+    ]);
 
     return this.formatOrderResponse(updatedOrder);
   }
@@ -341,6 +475,9 @@ export class OrderService {
       paymentMethodName: order.paymentMethod.name,
       serviceExpeditionId: order.serviceExpeditionId,
       serviceExpeditionName: order.serviceExpedition?.name,
+      expeditionId: order.serviceExpedition?.expeditionId, 
+      expeditionName: order.serviceExpedition?.expedition?.name, 
+      expeditionCode: order.serviceExpedition?.expedition?.code,
       orderDate: order.orderDate,
       totalAmount: order.totalAmount.toNumber(),
       shippingCost: order.shippingCost.toNumber(),
