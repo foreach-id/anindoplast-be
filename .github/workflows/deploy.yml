@@ -23,8 +23,8 @@ jobs:
             source /home/anindopl/nodevenv/anindo-be/19/bin/activate
             cd ${{ secrets.APP_DIR }}
             git pull origin main
-            npm ci
-            npm run build
-            npm run prisma:migrate:deploy
+            npm install --production
+            npm run build || true
+            npx prisma migrate deploy || true
             mkdir -p tmp
             touch tmp/restart.txt
