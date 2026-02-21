@@ -20,9 +20,11 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.PORT }}
           script: |
+            source /home/anindopl/nodevenv/anindo-be/19/bin/activate
             cd ${{ secrets.APP_DIR }}
             git pull origin main
-            pnpm install --frozen-lockfile
-            pnpm build
-            pnpm prisma:migrate:deploy
-            touch tmp/restart.txt || pm2 restart anindoplast-be
+            npm ci
+            npm run build
+            npm run prisma:migrate:deploy
+            mkdir -p tmp
+            touch tmp/restart.txt
