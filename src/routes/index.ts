@@ -10,6 +10,7 @@ import { orderRoutes } from '../modules/order/order.routes';
 import { receiptRoutes } from '../modules/receipt/receipt.route';
 import { productRoutes } from '../modules/product/product.routes';
 import { statsRoutes } from '../modules/stats';
+import { kiriminAjaRoutes } from '../modules/kiriminaja';
 
 const router = Router();
 
@@ -25,6 +26,7 @@ router.use('/product', productRoutes);
 router.use('/order', orderRoutes);
 router.use('/generate', receiptRoutes);
 router.use('/stats', statsRoutes)
+router.use('/shipping', kiriminAjaRoutes);
 
 // API info endpoint
 router.get('/', (_req, res) => {
@@ -42,6 +44,7 @@ router.get('/', (_req, res) => {
       customer: '/api/customer',
       customerAddress: '/api/customer_address',
       orderRoutes: '/api/order',
+      shipping: '/api/shipping',
     },
   });
 });
