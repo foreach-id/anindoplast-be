@@ -1,8 +1,8 @@
-name: Production Deploy
+name: Staging Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [staging]
 
 jobs:
   deploy:
@@ -21,9 +21,9 @@ jobs:
           port: ${{ secrets.PORT }}
           script_stop: true  
           script: |
-            source /home/anindopl/nodevenv/apps/anindoplast-be/24/bin/activate
-            cd ${{ secrets.APP_DIR }}
-            git pull origin main
+            source /home/anindopl/nodevenv/apps/anindoplast-be-staging/24/bin/activate
+            cd ${{ secrets.APP_DIR_STAGING }}
+            git pull origin staging
             npm ci --include=dev
             npm run build
             npx prisma migrate deploy
