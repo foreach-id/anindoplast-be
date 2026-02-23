@@ -24,8 +24,8 @@ jobs:
             source /home/anindopl/nodevenv/apps/anindoplast-be/24/bin/activate
             cd ${{ secrets.APP_DIR }}
             git pull origin main
-            NODE_ENV=development npm ci
+            npm ci --include=dev
             npm run build
-            NODE_ENV=production npx prisma migrate deploy
+            npx prisma migrate deploy
             mkdir -p tmp
             touch tmp/restart.txt
