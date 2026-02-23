@@ -20,7 +20,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.PORT }}
           script: |
-            source /home/anindopl/nodevenv/anindo-be/19/bin/activate
+            source /home/anindopl/nodevenv/apps/anindoplast-be/24/bin/activate
             cd ${{ secrets.APP_DIR }}
             git pull origin main
             npm ci
