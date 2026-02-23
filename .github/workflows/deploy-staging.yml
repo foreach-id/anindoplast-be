@@ -23,7 +23,7 @@ jobs:
           script: |
             source /home/anindopl/nodevenv/apps/anindoplast-be-staging/24/bin/activate
             cd ${{ secrets.APP_DIR_STAGING }}
-            git pull origin staging
+            git pull origin dev
             npm ci --include=dev
             npm run build
             npx prisma migrate deploy
