@@ -31,15 +31,15 @@
     /* Completeness */
     "skipLibCheck": true,
     /* Path Mapping */
-    "baseUrl": ".",
+    "baseUrl": "src",
     "paths": {
-      "@root/*": ["./*"],
-      "@modules/*": ["src/modules/*"],
-      "@middleware/*": ["src/middleware/*"],
-      "@utils/*": ["src/utils/*"],
-      "@config/*": ["src/config/*"],
-      "@interfaces/*": ["src/types/*"],
-      "@constants/*": ["src/constants/*"]
+      "@root/*": ["../*"],
+      "@modules/*": ["modules/*"],
+      "@middleware/*": ["middleware/*"],
+      "@utils/*": ["utils/*"],
+      "@config/*": ["config/*"],
+      "@interfaces/*": ["types/*"],
+      "@constants/*": ["constants/*"]
     },
     /* Advanced Options */
     "resolveJsonModule": true,

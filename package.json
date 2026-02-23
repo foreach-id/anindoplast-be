@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "build": "tsc && npx tsc-alias",
     "start": "node dist/server.js",
     "dev": "nodemon -r tsconfig-paths/register src/server.ts",
     "prisma:generate": "npx prisma generate",
@@ -15,6 +15,10 @@
     "prisma:seed": "ts-node -r tsconfig-paths/register prisma/seed.ts",
     "db:push": "npx prisma db push",
     "postinstall": "prisma generate"
+  },
+  "tsc-alias": {
+    "resolveFullPaths": true,
+    "verbose": false
   },
   "keywords": [],
   "author": "",
@@ -59,6 +63,7 @@
     "@types/nodemailer": "^7.0.9",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
+    "tsc-alias": "^1.x.x",
     "eslint": "^9.39.2",
     "nodemon": "^3.1.11",
     "prisma": "^6.19.2",
