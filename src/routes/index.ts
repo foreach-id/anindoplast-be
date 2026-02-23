@@ -30,7 +30,7 @@ router.use('/stats', statsRoutes)
 router.get('/', (_req, res) => {
   res.json({
     success: true,
-    message: 'ANINDO-PLAST API v1.0',
+    message: 'ANINDO-PLAST API v1.5',
     version: '1.0.0',
     endpoints: {
       auth: '/api/auth',
