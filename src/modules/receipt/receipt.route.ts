@@ -2,7 +2,7 @@ import { Router } from 'express';
 import AuthMiddleware from '../../middleware/authMiddleware';
 import { UserRole } from '@prisma/client';
 import { ReceiptController } from './receipt.controller';
-import { validate } from '@root/src/middleware/validateRequest';
+import { validate } from '@middleware/validateRequest';
 import { receiptSchemas } from './receipt.schema';
 
 const router = Router();

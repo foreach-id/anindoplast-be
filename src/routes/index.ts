@@ -32,8 +32,8 @@ router.use('/shipping', kiriminAjaRoutes);
 router.get('/', (_req, res) => {
   res.json({
     success: true,
-    message: 'Order-MGMT API v1.0',
-    version: '1.0.0',
+    message: 'ANINDO-PLAST API v1.7',
+    version: '1.7.0',
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',

@@ -31,15 +31,15 @@
     /* Completeness */
     "skipLibCheck": true,
     /* Path Mapping */
-    "baseUrl": ".",
+    "baseUrl": "src",
     "paths": {
-      "@root/*": ["./*"],
-      "@modules/*": ["src/modules/*"],
-      "@middleware/*": ["src/middleware/*"],
-      "@utils/*": ["src/utils/*"],
-      "@config/*": ["src/config/*"],
-      "@interfaces/*": ["src/types/*"],
-      "@constants/*": ["src/constants/*"]
+      "@root/*": ["../*"],
+      "@modules/*": ["modules/*"],
+      "@middleware/*": ["middleware/*"],
+      "@utils/*": ["utils/*"],
+      "@config/*": ["config/*"],
+      "@interfaces/*": ["types/*"],
+      "@constants/*": ["constants/*"]
     },
     /* Advanced Options */
     "resolveJsonModule": true,
@@ -47,7 +47,7 @@
     "declarationMap": true,
 
     /* --- TAMBAHAN PENTING 1: Agar folder types dibaca --- */
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "typeRoots": ["./node_modules/@types"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"],

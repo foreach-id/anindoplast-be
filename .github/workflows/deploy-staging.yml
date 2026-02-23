@@ -1,0 +1,31 @@
+name: Staging Deploy
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.PORT }}
+          script_stop: true  
+          script: |
+            source /home/anindopl/nodevenv/apps/anindoplast-be-staging/24/bin/activate
+            cd ${{ secrets.APP_DIR_STAGING }}
+            git pull origin dev
+            npm ci --include=dev
+            npm run build
+            npx prisma migrate deploy
+            mkdir -p tmp
+            touch tmp/restart.txt
