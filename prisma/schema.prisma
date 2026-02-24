@@ -101,6 +101,19 @@ model ServiceExpedition {
   @@map("service_expeditions")
 }
 
+model ProductCategory {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  insurance   Boolean   @default(false)
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  products    Product[]
+  
+  @@map("product_categories")
+}
+
 model Product {
   id          Int      @id @default(autoincrement())
   name        String   @db.VarChar(255)
@@ -113,6 +126,9 @@ model Product {
   width       Float?   // Dimensi bisa koma (cm)
   height      Float?
   length      Float?
+
+  categoryId  Int?     @map("category_id")
+  category    ProductCategory? @relation(fields: [categoryId], references: [id])
 
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")

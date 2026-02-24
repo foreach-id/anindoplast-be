@@ -11,6 +11,7 @@ import { receiptRoutes } from '../modules/receipt/receipt.route';
 import { productRoutes } from '../modules/product/product.routes';
 import { statsRoutes } from '../modules/stats';
 import { kiriminAjaRoutes } from '../modules/kiriminaja';
+import { productCategoryRoutes } from '@modules/productCategory';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use('/service_expedition', serviceExpeditionRoutes);
 router.use('/payment_method', paymentMethodRoutes);
 router.use('/customer', customerRoutes);
 router.use('/customer_address', customerAddressRoutes);
+router.use('/product_category', productCategoryRoutes);
 router.use('/product', productRoutes);
 router.use('/order', orderRoutes);
 router.use('/generate', receiptRoutes);
@@ -37,6 +39,7 @@ router.get('/', (_req, res) => {
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
+      productCategory: '/api/product_category',
       product: '/api/product',
       expedition: '/api/expedition',
       serviceExpedition: '/api/service_expedition',
