@@ -82,12 +82,20 @@ export class CustomerService {
     });
 
     let newAddress;
-    if (data.districtId && data.address) {
+    if (data.address && data.zipCode && data.provinceId && data.provinceName && data.cityId && data.cityName && data.districtId && data.districtName && data.subDistrictId && data.subDistrictName) {
       newAddress = await prisma.customerAddress.create({
         data: {
           customerId: newCustomer.id,
-          districtId: data.districtId,
           address: data.address,
+          zipCode: data.zipCode,
+          provinceId: data.provinceId,
+          provinceName: data.provinceName,
+          cityId: data.cityId,
+          cityName: data.cityName,
+          districtId: data.districtId,
+          districtName: data.districtName,
+          subDistrictId: data.subDistrictId,
+          subDistrictName: data.subDistrictName,
           createdAt: new Date(),
           updatedAt: new Date(),
           createdBy: userId,
@@ -97,7 +105,19 @@ export class CustomerService {
     }
 
     if (newAddress) {
-      return { ...newCustomer, address: newAddress.address, districtId: newAddress.districtId };
+      return {
+        ...newCustomer,
+        address: newAddress.address,
+        zipCode: newAddress.zipCode,
+        provinceId: newAddress.provinceId,
+        provinceName: newAddress.provinceName,
+        cityId: newAddress.cityId,
+        cityName: newAddress.cityName,
+        districtId: newAddress.districtId,
+        districtName: newAddress.districtName,
+        subDistrictId: newAddress.subDistrictId,
+        subDistrictName: newAddress.subDistrictName,
+      };
     }
 
     return newCustomer;

@@ -14,13 +14,21 @@ export interface CustomerAddressIdParamDTO {
 
 export interface CustomerAddressDTO {
   id: number;
-  name: string;
-  isActive: boolean;
-
+  address: string;
+  zipCode: string;
+  provinceId: number;
+  provinceName: string;
+  cityId: number;
+  cityName: string;
+  districtId: number;
+  districtName: string;
+  subDistrictId: number;
+  subDistrictName: string;
+  customerId: number;
   createdAt: Date;
   updatedAt: Date;
   createdBy: string;
-  updatedBy: string;
+  updatedBy: string | null;
 }
 
 export interface CustomerAddresssListResponseDTO {
