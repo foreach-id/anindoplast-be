@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 export const kiriminAjaSchemas = {
-
   // POST /api/shipping/check-rate
   checkRate: z.object({
     body: z.object({
@@ -13,19 +12,16 @@ export const kiriminAjaSchemas = {
     }),
   }),
 
-  // POST /api/shipping/create
-  createShipment: z.object({
-    body: z.object({
-      orderId: z.number().int().positive('Order ID wajib diisi'),
-      service: z.string().min(1, 'Kode service wajib diisi (cth: jnt, jne, sicepat)'),
-      serviceType: z.string().min(1, 'Tipe service wajib diisi (cth: REG, YES)'),
-      receiverKecamatanId: z.number().int().positive('Kecamatan ID penerima wajib diisi'),
-      receiverKelurahanId: z.number().int().positive('Kelurahan ID penerima wajib diisi'),
-      receiverZipcode: z.number().int().positive('Kode pos penerima wajib diisi'),
-      shippingCost: z.number().nonnegative('Ongkir tidak boleh negatif'),
-      cod: z.boolean().default(false),
-      schedule: z.string().optional(),  // format: "YYYY-MM-DD HH:mm:ss"
+  // POST /api/shipping/process/:id
+  processOrder: z.object({
+    params: z.object({
+      id: z.string().transform((val) => parseInt(val, 10)),
     }),
+    body: z
+      .object({
+        schedule: z.string().optional(),
+      })
+      .optional(),
   }),
 
   // GET /api/shipping/track/awb/:awb
@@ -56,6 +52,48 @@ export const kiriminAjaSchemas = {
   searchDistrict: z.object({
     query: z.object({
       keyword: z.string().min(2, 'Keyword minimal 2 karakter'),
+    }),
+  }),
+
+  // GET /api/shipping/location/provinces
+  getProvinces: z.object({}),
+
+  // GET /api/shipping/location/cities?provinceId=xxx
+  getCities: z.object({
+    query: z.object({
+      provinceId: z.string().transform((val) => parseInt(val, 10)),
+    }),
+  }),
+
+  getDistricts: z.object({
+    query: z.object({
+      cityId: z.string().transform((val) => parseInt(val, 10)),
+    }),
+  }),
+
+  // GET /api/shipping/location/subdistricts?districtId=xxx
+  getSubdistrict: z.object({
+    query: z.object({
+      districtId: z.string().transform((val) => parseInt(val, 10)),
+    }),
+  }),
+
+  // GET /api/shipping/location/address?search=xxx
+  searchAddress: z.object({
+    query: z.object({
+      search: z.string().min(3, 'Search minimal 3 karakter'),
+    }),
+  }),
+
+  // POST /api/shipping/shipping-price
+  getShippingPrice: z.object({
+    body: z.object({
+      origin: z.number().int().positive('Origin kecamatan ID wajib diisi'),
+      destination: z.number().int().positive('Destination kecamatan ID wajib diisi'),
+      weight: z.number().int().positive('Berat harus lebih dari 0 gram'),
+      itemValue: z.number().nonnegative('Nilai barang tidak boleh negatif'),
+      insurance: z.number().int().min(0).max(1).optional().default(0),
+      courier: z.array(z.string()).optional(),
     }),
   }),
 };

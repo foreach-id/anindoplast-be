@@ -10,14 +10,7 @@ export class ReceiptService {
     const orders = await prisma.order.findMany({
       where: { deliveryNumber: { in: deliveryNumbers } },
       include: {
-        customer: true,
-        customerAddress: true,
-        orderItems: {
-          include: {
-            product: true,
-          },
-        },
-        serviceExpedition: true,
+        orderItems: true,
       },
     });
 
@@ -26,8 +19,8 @@ export class ReceiptService {
     }
 
     return orders.map((order) => {
-      const totalWeight = order.orderItems.reduce((sum, item) => {
-        const productWeight = item.product.weight || 0;
+      const totalWeight = order.orderItems.reduce((sum: number, item: any) => {
+        const productWeight = item.productWeight || 0;
         return sum + productWeight * item.quantity;
       }, 0);
 
@@ -36,27 +29,27 @@ export class ReceiptService {
         orderNumber: order.orderNumber || '',
         codAmount: Number(order.grandTotal),
         recipient: {
-          name: order.customer.name,
-          phone: `${order.customer.countryCode}${order.customer.phone}`,
-          address: order.customerAddress.address,
-          district: order.customerAddress.districtId.toString(),
-          city: '',
-          province: '',
+          name: order.customerName || '',
+          phone: `${order.customerCountryCode || ''}${order.customerPhone || ''}`,
+          address: order.customerAddressFull || '',
+          district: order.customerDistrict || '',
+          city: order.customerCity || '',
+          province: order.customerProvince || '',
         },
         sender: {
           name: 'Ferawani Store',
           phone: '+6285271372389',
           district: 'CIBEUNYING KALER',
         },
-        items: order.orderItems.map((item) => ({
-          name: item.product.name,
+        items: order.orderItems.map((item: any) => ({
+          name: item.productName,
           quantity: item.quantity,
         })),
         weight: totalWeight / 1000,
         orderDate: order.orderDate,
         notes: order.notes || '',
-        serviceExpeditionCode: order.serviceExpedition?.code || 'SDS222606209',
-        serviceExpeditionName: order.serviceExpedition?.name || '[EZ] - JNT-COD',
+        serviceExpeditionCode: order.service || 'SDS222606209',
+        serviceExpeditionName: order.serviceName || '[EZ] - JNT-COD',
       };
     });
   }
