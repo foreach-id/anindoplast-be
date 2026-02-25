@@ -9,14 +9,15 @@ import {
   KiriminAjaPackage,
   TrackingResponse,
   CancelOrderResponse,
-  SearchDistrictResponse,
   ShipperConfig,
+  ProvinceResponse,
+  CityResponse,
+  KelurahanResponse,
+  AddressSearchResponse,
+  ShippingPriceDTO,
+  ShippingPriceResponse,
 } from './kiriminaja.types';
 
-/**
- * Ambil konfigurasi pengirim (toko) dari environment variables
- * Wajib diisi di .env sebelum bisa buat shipment
- */
 function getShipperConfig(): ShipperConfig {
   const name = process.env.SHIPPER_NAME;
   const phone = process.env.SHIPPER_PHONE;
@@ -39,9 +40,6 @@ function getShipperConfig(): ShipperConfig {
   };
 }
 
-/**
- * Generate jadwal pickup = sekarang + 2 jam (format: "YYYY-MM-DD HH:mm:ss", timezone WIB)
- */
 function generateSchedule(customSchedule?: string): string {
   if (customSchedule) return customSchedule;
   const now = new Date();
@@ -205,43 +203,11 @@ export class KiriminAjaService {
     return response;
   }
 
-  // ------------------------------------------------------------------
-  // 3. TRACKING BERDASARKAN AWB
-  // GET /api/mitra/v2/shTracking?awb={awb}
-  //
-  // Real Response:
-  // {
-  //   "status": true,
-  //   "text": "Delivered to BAGUS | 14-07-2021 16:00 | YOGYAKARTA",
-  //   "method": "shTracking",
-  //   "status_code": 200,
-  //   "details": {
-  //     "awb": "DEVEL-000000004",
-  //     "order_id": "OID-8793949106",
-  //     "service": "jne",
-  //     "service_name": "REG",
-  //     "shipped_at": "2021-07-13 17:44:04",
-  //     "delivered": true,
-  //     "delivered_at": "2021-10-17 16:53:00",
-  //     "origin": { "name": "KiriminAja", "city": "Sleman", ... },
-  //     "destination": { "name": "Zainal Arifin", "city": "Bantul", ... }
-  //   },
-  //   "histories": [
-  //     { "created_at": "2021-07-14 16:00:00", "status": "Delivered to BAGUS...", "status_code": 200 },
-  //     { "created_at": "2021-07-14 09:53:00", "status": "With delivery courier YOGYAKARTA", "status_code": 100 },
-  //     ...
-  //   ]
-  // }
-  // ------------------------------------------------------------------
   static async trackOrder(awb: string): Promise<TrackingResponse> {
     const response = await kiriminAjaClient.get<TrackingResponse>('/api/mitra/v2/shTracking', { awb });
     return response;
   }
 
-  // ------------------------------------------------------------------
-  // 4. TRACKING BERDASARKAN ORDER ID INTERNAL
-  // (Helper: cari AWB dari DB dulu, lalu track)
-  // ------------------------------------------------------------------
   static async trackByOrderId(orderId: number): Promise<TrackingResponse> {
     const order = await prisma.order.findFirst({
       where: { id: orderId, deletedAt: null },
@@ -256,17 +222,6 @@ export class KiriminAjaService {
     return this.trackOrder(order.deliveryNumber);
   }
 
-  // ------------------------------------------------------------------
-  // 5. CANCEL ORDER
-  // POST /api/mitra/v2/order/void
-  //
-  // Real Request Body:
-  // { "order_id": "AMP17403291234", "reason": "Pembatalan oleh customer" }
-  //
-  // Real Response:
-  // { "status": true, "text": "Order berhasil dibatalkan", "method": "void",
-  //   "details": { "order_id": "AMP17403291234", "status": "cancelled" } }
-  // ------------------------------------------------------------------
   static async cancelShipment(orderId: number, reason?: string): Promise<CancelOrderResponse> {
     const order = await prisma.order.findFirst({
       where: { id: orderId, deletedAt: null },
@@ -302,21 +257,37 @@ export class KiriminAjaService {
     return response;
   }
 
+  static async getProvinces(): Promise<ProvinceResponse> {
+    return kiriminAjaClient.post<ProvinceResponse>('/api/mitra/province');
+  }
+
+  static async getCities(provinceId: number): Promise<CityResponse> {
+    return kiriminAjaClient.post<CityResponse>('/api/mitra/city', { provinsi_id: provinceId });
+  }
+
+  static async getDistrict(cityId: number): Promise<CityResponse> {
+    return kiriminAjaClient.post<CityResponse>('/api/mitra/kecamatan', { kabupaten_id: cityId });
+  }
+
+  static async getSubdistrict(districtId: number): Promise<KelurahanResponse> {
+    return kiriminAjaClient.post<KelurahanResponse>('/api/mitra/kelurahan', { kecamatan_id: districtId });
+  }
+
+  static async searchAddress(search: string): Promise<AddressSearchResponse> {
+    return kiriminAjaClient.post<AddressSearchResponse>('/api/mitra/v2/get_address_by_name', { search });
+  }
   // ------------------------------------------------------------------
-  // 6. SEARCH DISTRICT / KECAMATAN
-  // GET /api/mitra/v2/district/search?keyword=yogyakarta
-  //
-  // Real Response:
-  // {
-  //   "status": true,
-  //   "data": [
-  //     { "id": 548, "name": "Mlati", "city": "Sleman", "province": "DIY", "zip_code": "55283" },
-  //     ...
-  //   ]
-  // }
+  // 11. SHIPPING PRICE v6.1
+  // POST /api/mitra/v6.1/shipping_price
   // ------------------------------------------------------------------
-  static async searchDistrict(keyword: string): Promise<SearchDistrictResponse> {
-    const response = await kiriminAjaClient.get<SearchDistrictResponse>('/api/mitra/v2/district/search', { keyword });
-    return response;
+  static async getShippingPrice(dto: ShippingPriceDTO): Promise<ShippingPriceResponse> {
+    return kiriminAjaClient.post<ShippingPriceResponse>('/api/mitra/v6.1/shipping_price', {
+      origin: dto.origin,
+      destination: dto.destination,
+      weight: dto.weight,
+      item_value: String(dto.itemValue),
+      insurance: dto.insurance ?? 0,
+      ...(dto.courier && dto.courier.length > 0 && { courier: dto.courier }),
+    });
   }
 }

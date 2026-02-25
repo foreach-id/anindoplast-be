@@ -33,6 +33,74 @@ export interface CheckPricingResponse {
 }
 
 // ============================================================
+// SHIPPING PRICE v6.1 - POST /api/mitra/v6.1/shipping_price
+// ============================================================
+
+export interface ShippingPriceDTO {
+  origin: number; // kecamatan_id asal
+  destination: number; // kecamatan_id tujuan
+  weight: number; // gram
+  itemValue: number; // nilai barang
+  insurance?: number; // 0 = no, 1 = yes
+  courier?: string[]; // filter kurir, misal ["jnt", "jne"]
+}
+
+export interface ShippingPriceDiscountCampaign {
+  discount: number;
+  discount_percentage: number;
+  discount_campaign_id: number;
+  discount_type: string;
+}
+
+export interface ShippingPriceSetting {
+  cod_fee: string;
+  minimum_cod_fee: string;
+  insurance_fee: string;
+  insurance_add_cost: number;
+  cod_fee_amount: number;
+}
+
+export interface ShippingPriceResult {
+  service: string;
+  service_name: string;
+  service_type: string;
+  cost: string;
+  etd: string;
+  cod: boolean;
+  group: string;
+  drop: boolean;
+  cut_off_time: string;
+  force_insurance: boolean;
+  add_cost: string;
+  use_geolocation: boolean;
+  use_insurance: boolean;
+  is_mock_data: boolean;
+  discount_campaign: ShippingPriceDiscountCampaign;
+  discount_amount: number;
+  discount_percentage: number;
+  discount_type: string;
+  setting: ShippingPriceSetting;
+  insurance: number;
+}
+
+export interface ShippingPriceDetails {
+  origin_district_id: number;
+  destination_district_id: number;
+  weight: number;
+  item_value: string;
+  insurance: number;
+  courier: string[];
+}
+
+export interface ShippingPriceResponse {
+  status: boolean;
+  text: string;
+  method: string;
+  details: ShippingPriceDetails;
+  results: ShippingPriceResult[];
+}
+
+// ============================================================
 // CREATE ORDER EXPRESS - POST /api/mitra/v5/request_pickup
 // Dokumentasi: https://developer.kiriminaja.com/docs/express/request
 // ============================================================
@@ -211,6 +279,62 @@ export interface ShipperConfig {
   kelurahan_id: number;
   address: string;
   zipcode: string;
+}
+
+// ============================================================
+// LOCATION DATA
+// ============================================================
+
+export interface Province {
+  id: number;
+  provinsi_name: string;
+}
+
+export interface ProvinceResponse {
+  status: boolean;
+  method: string;
+  text: string;
+  datas: Province[];
+}
+
+export interface City {
+  id: number;
+  provinsi_id: number;
+  kabupaten_name: string;
+  type: string;
+  postal_code: string;
+}
+
+export interface CityResponse {
+  status: boolean;
+  method: string;
+  text: string;
+  datas: City[];
+}
+
+export interface Kelurahan {
+  id: number;
+  kelurahan_name: string;
+  kecamatan_id: number;
+}
+
+export interface KelurahanResponse {
+  status: boolean;
+  text: string;
+  method: string;
+  results: Kelurahan[];
+}
+
+export interface AddressSearchResult {
+  id: number;
+  text: string;
+}
+
+export interface AddressSearchResponse {
+  status: boolean;
+  text: string;
+  method: string;
+  data: AddressSearchResult[];
 }
 
 export interface CreateShipmentDTO {

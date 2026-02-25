@@ -81,17 +81,84 @@ export class KiriminAjaController {
   }
 
   /**
-   * GET /api/shipping/district/search?keyword=xxx
-   * Cari kecamatan / kelurahan KiriminAja untuk dropdown di FE
+   * GET /api/shipping/location/provinces
    */
-  static async searchDistrict(req: Request, res: Response) {
+  static async getProvinces(_req: Request, res: Response) {
     try {
-      const { keyword } = req.query as { keyword: string };
-      const result = await KiriminAjaService.searchDistrict(keyword);
-      return res.status(statusCodes.OK).json(responseTemplates.success(result.data, 'Districts retrieved successfully'));
+      const result = await KiriminAjaService.getProvinces();
+      return res.status(statusCodes.OK).json(responseTemplates.success(result.datas, 'Provinces retrieved successfully'));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An error occurred';
       return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(responseTemplates.error(message));
+    }
+  }
+
+  /**
+   * GET /api/shipping/location/cities?provinceId=xxx
+   */
+  static async getCities(req: Request, res: Response) {
+    try {
+      const { provinceId } = req.query as { provinceId: string };
+      const result = await KiriminAjaService.getCities(parseInt(provinceId, 10));
+      return res.status(statusCodes.OK).json(responseTemplates.success(result.datas, 'Cities retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(responseTemplates.error(message));
+    }
+  }
+
+  /**
+   * GET /api/shipping/location/districts?cityId=xxx
+   */
+  static async getDistricts(req: Request, res: Response) {
+    try {
+      const { cityId } = req.query as { cityId: string };
+      const result = await KiriminAjaService.getDistrict(parseInt(cityId, 10));
+      return res.status(statusCodes.OK).json(responseTemplates.success(result.datas, 'Districts retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(responseTemplates.error(message));
+    }
+  }
+
+  /**
+   * GET /api/shipping/location/subdistricts?districtId=xxx
+   */
+  static async getSubdistrict(req: Request, res: Response) {
+    try {
+      const { districtId } = req.query as { districtId: string };
+      const result = await KiriminAjaService.getSubdistrict(parseInt(districtId, 10));
+      return res.status(statusCodes.OK).json(responseTemplates.success(result.results, 'Subdistricts retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(responseTemplates.error(message));
+    }
+  }
+
+  /**
+   * GET /api/shipping/location/address?search=xxx
+   */
+  static async searchAddress(req: Request, res: Response) {
+    try {
+      const { search } = req.query as { search: string };
+      const result = await KiriminAjaService.searchAddress(search);
+      return res.status(statusCodes.OK).json(responseTemplates.success(result.data, 'Address results retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(responseTemplates.error(message));
+    }
+  }
+
+  /**
+   * POST /api/shipping/shipping-price
+   */
+  static async getShippingPrice(req: Request, res: Response) {
+    try {
+      const result = await KiriminAjaService.getShippingPrice(req.body);
+      return res.status(statusCodes.OK).json(responseTemplates.success(result.results, 'Shipping price retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.BAD_REQUEST).json(responseTemplates.error(message));
     }
   }
 }

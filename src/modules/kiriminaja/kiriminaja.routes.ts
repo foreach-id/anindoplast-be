@@ -45,9 +45,34 @@ router.get('/track/order/:id', validate(kiriminAjaSchemas.trackByOrderId), Kirim
 router.post('/cancel/:id', validate(kiriminAjaSchemas.cancelShipment), KiriminAjaController.cancelShipment);
 
 /**
- * GET /api/shipping/district/search?keyword=xxx
- * Cari kecamatan / kelurahan KiriminAja untuk dropdown pilih area
+ * GET /api/shipping/location/provinces
  */
-router.get('/district/search', validate(kiriminAjaSchemas.searchDistrict), KiriminAjaController.searchDistrict);
+router.get('/location/provinces', validate(kiriminAjaSchemas.getProvinces), KiriminAjaController.getProvinces);
+
+/**
+ * GET /api/shipping/location/cities?provinceId=xxx
+ */
+router.get('/location/cities', validate(kiriminAjaSchemas.getCities), KiriminAjaController.getCities);
+
+/**
+ * GET /api/shipping/location/districts?cityId=xxx
+ */
+router.get('/location/districts', validate(kiriminAjaSchemas.getDistricts), KiriminAjaController.getDistricts);
+
+/**
+ * GET /api/shipping/location/subdistricts?districtId=xxx
+ */
+router.get('/location/subdistricts', validate(kiriminAjaSchemas.getSubdistrict), KiriminAjaController.getSubdistrict);
+
+/**
+ * GET /api/shipping/location/address?search=xxx
+ */
+router.get('/location/address', validate(kiriminAjaSchemas.searchAddress), KiriminAjaController.searchAddress);
+
+/**
+ * POST /api/shipping/shipping-price
+ * Cek ongkir menggunakan API v6.1
+ */
+router.post('/shipping_price', validate(kiriminAjaSchemas.getShippingPrice), KiriminAjaController.getShippingPrice);
 
 export const kiriminAjaRoutes = router;

@@ -54,4 +54,46 @@ export const kiriminAjaSchemas = {
       keyword: z.string().min(2, 'Keyword minimal 2 karakter'),
     }),
   }),
+
+  // GET /api/shipping/location/provinces
+  getProvinces: z.object({}),
+
+  // GET /api/shipping/location/cities?provinceId=xxx
+  getCities: z.object({
+    query: z.object({
+      provinceId: z.string().transform((val) => parseInt(val, 10)),
+    }),
+  }),
+
+  getDistricts: z.object({
+    query: z.object({
+      cityId: z.string().transform((val) => parseInt(val, 10)),
+    }),
+  }),
+
+  // GET /api/shipping/location/subdistricts?districtId=xxx
+  getSubdistrict: z.object({
+    query: z.object({
+      districtId: z.string().transform((val) => parseInt(val, 10)),
+    }),
+  }),
+
+  // GET /api/shipping/location/address?search=xxx
+  searchAddress: z.object({
+    query: z.object({
+      search: z.string().min(3, 'Search minimal 3 karakter'),
+    }),
+  }),
+
+  // POST /api/shipping/shipping-price
+  getShippingPrice: z.object({
+    body: z.object({
+      origin: z.number().int().positive('Origin kecamatan ID wajib diisi'),
+      destination: z.number().int().positive('Destination kecamatan ID wajib diisi'),
+      weight: z.number().int().positive('Berat harus lebih dari 0 gram'),
+      itemValue: z.number().nonnegative('Nilai barang tidak boleh negatif'),
+      insurance: z.number().int().min(0).max(1).optional().default(0),
+      courier: z.array(z.string()).optional(),
+    }),
+  }),
 };
