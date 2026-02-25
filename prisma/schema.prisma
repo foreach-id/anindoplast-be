@@ -97,7 +97,6 @@ model ServiceExpedition {
   updatedAt                    DateTime   @updatedAt @map("updated_at")
   deletedAt                    DateTime?  @map("deleted_at")
 
-  orders                       Order[]
   @@map("service_expeditions")
 }
 
@@ -229,15 +228,28 @@ model Order {
   
   customerId          Int              @map("customer_id")
   customer            Customer         @relation(fields: [customerId], references: [id])
+  customerName        String           @map("customer_name") @db.VarChar(255)
+  customerPhone       String           @map("customer_phone") @db.VarChar(20)
+  customerCountryCode String           @map("customer_country_code") @db.VarChar(10)
   
   customerAddressId   Int              @map("customer_address_id")
   customerAddress     CustomerAddress  @relation(fields: [customerAddressId], references: [id])
+  customerAddressFull String           @map("customer_address_full") @db.Text
+  customerProvince    String           @map("customer_province") @db.VarChar(100)
+  customerCity        String           @map("customer_city") @db.VarChar(100)
+  customerDistrict    String           @map("customer_district") @db.VarChar(100)
+  customerSubDistrict String           @map("customer_sub_district") @db.VarChar(100)
+  customerZipCode     String           @map("customer_zip_code") @db.VarChar(20)
   
   paymentMethodId     Int              @map("payment_method_id")
   paymentMethod       PaymentMethod    @relation(fields: [paymentMethodId], references: [id])
+  paymentMethodName   String           @map("payment_method_name") @db.VarChar(255)
   
-  serviceExpeditionId Int?             @map("service_expedition_id")
-  serviceExpedition   ServiceExpedition? @relation(fields: [serviceExpeditionId], references: [id])
+  service             String?          @map("service") @db.VarChar(255)
+  serviceName         String?          @map("service_name") @db.VarChar(255)
+  serviceType         String?          @map("service_type") @db.VarChar(255)
+  isCod               Boolean          @default(false) @map("is_cod")
+  isDropOff           Boolean          @default(false) @map("is_drop_off")
   
   orderDate           DateTime         @default(now()) @map("order_date")
   totalAmount         Decimal          @db.Decimal(15, 2) @map("total_amount")
@@ -271,6 +283,13 @@ model OrderItem {
   
   productId   Int      @map("product_id")
   product     Product  @relation(fields: [productId], references: [id])
+  productName String   @map("product_name") @db.VarChar(255)
+  productSku  String   @map("product_sku") @db.VarChar(100)
+  
+  productWeight Int?   @map("product_weight")
+  productWidth  Float? @map("product_width")
+  productHeight Float? @map("product_height")
+  productLength Float? @map("product_length")
   
   quantity    Int
   unitPrice   Decimal  @db.Decimal(15, 2) @map("unit_price")

@@ -1,13 +1,6 @@
 import prisma from '../../config/prisma';
 import { Prisma, OrderStatus } from '@prisma/client';
-import {
-  DashboardStatsDTO,
-  SalesStatsDTO,
-  ProductStatsDTO,
-  CustomerStatsDTO,
-  OrderStatsDTO,
-  DateRangeQueryDTO,
-} from './stats.types';
+import { DashboardStatsDTO, SalesStatsDTO, ProductStatsDTO, CustomerStatsDTO, OrderStatsDTO, DateRangeQueryDTO } from './stats.types';
 
 export class StatsService {
   // =====================================================
@@ -32,18 +25,7 @@ export class StatsService {
     }
 
     // Order Statistics
-    const [
-      totalOrders,
-      pendingOrders,
-      confirmedOrders,
-      processingOrders,
-      shippedOrders,
-      deliveredOrders,
-      cancelledOrders,
-      todayOrders,
-      thisWeekOrders,
-      thisMonthOrders,
-    ] = await Promise.all([
+    const [totalOrders, pendingOrders, confirmedOrders, processingOrders, shippedOrders, deliveredOrders, cancelledOrders, todayOrders, thisWeekOrders, thisMonthOrders] = await Promise.all([
       prisma.order.count({ where: { ...dateFilter } }),
       prisma.order.count({ where: { ...dateFilter, status: OrderStatus.PENDING } }),
       prisma.order.count({ where: { ...dateFilter, status: OrderStatus.CONFIRMED } }),
@@ -161,44 +143,32 @@ export class StatsService {
     );
 
     // Expedition Statistics
-    const [totalExpeditions, activeExpeditions] = await Promise.all([
-      prisma.expedition.count({ where: { deletedAt: null } }),
-      prisma.expedition.count({ where: { deletedAt: null, isActive: true } }),
-    ]);
+    const [totalExpeditions, activeExpeditions] = await Promise.all([prisma.expedition.count({ where: { deletedAt: null } }), prisma.expedition.count({ where: { deletedAt: null, isActive: true } })]);
 
     // Most Used Expeditions
     const mostUsedExpeditionsData = await prisma.order.groupBy({
-      by: ['serviceExpeditionId'],
+      by: ['serviceName'],
       where: {
         deletedAt: null,
-        serviceExpeditionId: { not: null },
+        serviceName: { not: null },
       },
       _count: {
-        id: true,
+        _all: true,
       },
       orderBy: {
         _count: {
-          id: 'desc',
+          serviceName: 'desc',
         },
       },
       take: 5,
     });
 
-    const mostUsedExpeditions = await Promise.all(
-      mostUsedExpeditionsData.map(async (item) => {
-        if (!item.serviceExpeditionId) return null;
-        const service = await prisma.serviceExpedition.findUnique({
-          where: { id: item.serviceExpeditionId },
-          include: { expedition: true },
-        });
-        return {
-          id: item.serviceExpeditionId,
-          name: service?.name || 'Unknown',
-          code: service?.code || '-',
-          orderCount: item._count.id,
-        };
-      }),
-    );
+    const mostUsedExpeditions = mostUsedExpeditionsData
+      .filter((item) => item.serviceName)
+      .map((item) => ({
+        name: item.serviceName || 'Unknown',
+        orderCount: item._count._all,
+      }));
 
     return {
       orders: {
@@ -342,32 +312,26 @@ export class StatsService {
 
     // Revenue by Expedition
     const expeditionRevenue = await prisma.order.groupBy({
-      by: ['serviceExpeditionId'],
+      by: ['serviceName'],
       where: {
         ...dateFilter,
-        serviceExpeditionId: { not: null },
+        serviceName: { not: null },
       },
       _sum: {
         grandTotal: true,
       },
       _count: {
-        id: true,
+        _all: true,
       },
     });
 
-    const revenueByExpedition = await Promise.all(
-      expeditionRevenue.map(async (item) => {
-        if (!item.serviceExpeditionId) return null;
-        const service = await prisma.serviceExpedition.findUnique({
-          where: { id: item.serviceExpeditionId },
-        });
-        return {
-          expeditionName: service?.name || 'Unknown',
-          orderCount: item._count.id,
-          revenue: Number(item._sum.grandTotal || 0),
-        };
-      }),
-    );
+    const revenueByExpedition = expeditionRevenue
+      .filter((item) => item.serviceName)
+      .map((item) => ({
+        expeditionName: item.serviceName || 'Unknown',
+        orderCount: item._count._all,
+        revenue: Number(item._sum?.grandTotal || 0),
+      }));
 
     // Revenue by Payment Method
     const paymentRevenue = await prisma.order.groupBy({

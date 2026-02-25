@@ -5,17 +5,17 @@
 export interface CheckPricingRequest {
   origin_district_id: number;
   destination_district_id: number;
-  weight: number;     // gram
+  weight: number; // gram
   item_value?: number;
   cod?: boolean;
 }
 
 export interface CourierRate {
-  service: string;           // "jnt", "jne", "sicepat", dst
-  service_type: string;      // "REG", "YES", "BEST", dst
-  service_label: string;     // "J&T Regular", "JNE Reguler"
-  price: number;             // ongkir dalam rupiah
-  estimated_day: string;     // "2-3 hari"
+  service: string; // "jnt", "jne", "sicepat", dst
+  service_type: string; // "REG", "YES", "BEST", dst
+  service_label: string; // "J&T Regular", "JNE Reguler"
+  price: number; // ongkir dalam rupiah
+  estimated_day: string; // "2-3 hari"
   cod: boolean;
   insurance: boolean;
   insurance_fee: number;
@@ -38,44 +38,46 @@ export interface CheckPricingResponse {
 // ============================================================
 
 export interface KiriminAjaPackage {
-  order_id: string;                    // order_number internal kamu
-  destination_name: string;            // nama penerima
-  destination_phone: string;           // nomor hp penerima
-  destination_address: string;         // alamat lengkap penerima
-  destination_kecamatan_id: number;    // ID kecamatan KiriminAja
-  destination_kelurahan_id: number;    // ID kelurahan KiriminAja
-  destination_zipcode: number;         // kode pos
-  weight: number;                      // gram
-  width?: number;                      // cm
-  height?: number;                     // cm
-  length?: number;                     // cm
-  item_value: number;                  // nilai barang (rupiah)
-  shipping_cost: number;               // ongkir yang dipilih user dari check-price
-  service: string;                     // "jnt", "jne", "sicepat"
-  service_type: string;                // "REG", "YES"
-  item_name: string;                   // nama/deskripsi isi paket
-  package_type_id?: number;            // 7 = parcel (default)
-  cod?: number;                        // nominal COD dalam rupiah (isi jika COD)
+  order_id: string; // order_number internal kamu
+  destination_name: string; // nama penerima
+  destination_phone: string; // nomor hp penerima
+  destination_address: string; // alamat lengkap penerima
+  destination_kecamatan_id: number; // ID kecamatan KiriminAja
+  destination_kelurahan_id: number; // ID kelurahan KiriminAja
+  destination_zipcode: number; // kode pos
+  weight: number; // gram
+  width?: number; // cm
+  height?: number; // cm
+  length?: number; // cm
+  item_value: number; // nilai barang (rupiah)
+  shipping_cost: number; // ongkir yang dipilih user dari check-price
+  service: string; // "jnt", "jne", "sicepat"
+  service_type: string; // "REG", "YES"
+  item_name: string; // nama/deskripsi isi paket
+  package_type_id?: number; // 7 = parcel (default)
+  cod?: number; // nominal COD dalam rupiah (isi jika COD)
+  drop?: boolean; // apakah drop off (isi jika drop off)
+  note?: string; // catatan untuk kurir
 }
 
 export interface CreateOrderExpressRequest {
   // Data pengirim (dari .env)
-  name: string;              // nama toko / pengirim
-  phone: string;             // no hp pengirim
-  address: string;           // alamat pengirim
-  kecamatan_id: number;      // ID kecamatan pengirim (KiriminAja)
-  kelurahan_id: number;      // ID kelurahan pengirim (KiriminAja)
-  zipcode: string;           // kode pos pengirim
-  schedule: string;          // "2026-02-21 10:00:00" - waktu pickup
+  name: string; // nama toko / pengirim
+  phone: string; // no hp pengirim
+  address: string; // alamat pengirim
+  kecamatan_id: number; // ID kecamatan pengirim (KiriminAja)
+  kelurahan_id: number; // ID kelurahan pengirim (KiriminAja)
+  zipcode: string; // kode pos pengirim
+  schedule: string; // "2026-02-21 10:00:00" - waktu pickup
 
   packages: KiriminAjaPackage[];
 }
 
 // Response dari KiriminAja setelah buat order
 export interface KiriminAjaOrderDetail {
-  order_id: string;          // order_number kamu
-  kj_order_id: string;       // order_id internal KiriminAja
-  awb: string | null;        // nomor resi (bisa null saat baru dibuat)
+  order_id: string; // order_number kamu
+  kj_order_id: string; // order_id internal KiriminAja
+  awb: string | null; // nomor resi (bisa null saat baru dibuat)
   service: string;
   service_type: string;
 }
@@ -83,11 +85,11 @@ export interface KiriminAjaOrderDetail {
 export interface CreateOrderExpressResponse {
   status: boolean;
   text: string;
-  method: string;             // "request_pickup"
-  payment_status: string;     // "paid" | "unpaid"
-  qr_url?: string;            // QR payment jika unpaid
+  method: string; // "request_pickup"
+  payment_status: string; // "paid" | "unpaid"
+  qr_url?: string; // QR payment jika unpaid
   details: KiriminAjaOrderDetail[];
-  pickup_number: string;      // "XID-7850941654"
+  pickup_number: string; // "XID-7850941654"
 }
 
 // ============================================================
@@ -164,7 +166,7 @@ export interface TrackingResponse {
 // ============================================================
 
 export interface CancelOrderRequest {
-  order_id: string;    // order_number internal kamu
+  order_id: string; // order_number internal kamu
   reason?: string;
 }
 
@@ -213,14 +215,7 @@ export interface ShipperConfig {
 
 export interface CreateShipmentDTO {
   orderId: number;
-  service: string;                  // "jnt", "jne", "sicepat"
-  serviceType: string;              // "REG", "YES"
-  receiverKecamatanId: number;      // ID kecamatan KiriminAja
-  receiverKelurahanId: number;      // ID kelurahan KiriminAja
-  receiverZipcode: number;
-  shippingCost: number;             // Ongkir yang sudah dicek dari check-price
-  cod: boolean;
-  schedule?: string;                // default: 2 jam dari sekarang
+  schedule?: string; // default: 2 jam dari sekarang
 }
 
 export interface CheckRateDTO {

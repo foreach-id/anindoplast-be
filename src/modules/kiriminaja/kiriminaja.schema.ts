@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 export const kiriminAjaSchemas = {
-
   // POST /api/shipping/check-rate
   checkRate: z.object({
     body: z.object({
@@ -13,19 +12,16 @@ export const kiriminAjaSchemas = {
     }),
   }),
 
-  // POST /api/shipping/create
-  createShipment: z.object({
-    body: z.object({
-      orderId: z.number().int().positive('Order ID wajib diisi'),
-      service: z.string().min(1, 'Kode service wajib diisi (cth: jnt, jne, sicepat)'),
-      serviceType: z.string().min(1, 'Tipe service wajib diisi (cth: REG, YES)'),
-      receiverKecamatanId: z.number().int().positive('Kecamatan ID penerima wajib diisi'),
-      receiverKelurahanId: z.number().int().positive('Kelurahan ID penerima wajib diisi'),
-      receiverZipcode: z.number().int().positive('Kode pos penerima wajib diisi'),
-      shippingCost: z.number().nonnegative('Ongkir tidak boleh negatif'),
-      cod: z.boolean().default(false),
-      schedule: z.string().optional(),  // format: "YYYY-MM-DD HH:mm:ss"
+  // POST /api/shipping/process/:id
+  processOrder: z.object({
+    params: z.object({
+      id: z.string().transform((val) => parseInt(val, 10)),
     }),
+    body: z
+      .object({
+        schedule: z.string().optional(),
+      })
+      .optional(),
   }),
 
   // GET /api/shipping/track/awb/:awb

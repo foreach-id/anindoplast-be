@@ -18,12 +18,16 @@ export class KiriminAjaController {
   }
 
   /**
-   * POST /api/shipping/create
-   * Buat shipment ke KiriminAja → AWB tersimpan ke orders.delivery_number
+   * POST /api/shipping/process/:id
+   * Proses order ke KiriminAja hanya dengan order ID — semua data diambil otomatis dari order
    */
-  static async createShipment(req: Request, res: Response) {
+  static async processOrder(req: Request, res: Response) {
     try {
-      const result = await KiriminAjaService.createShipment(req.body);
+      const { id } = req.params;
+      const result = await KiriminAjaService.createShipmentExpress({
+        orderId: Number(id),
+        schedule: req.body?.schedule,
+      });
       return res.status(statusCodes.CREATED).json(responseTemplates.success(result, 'Shipment created successfully'));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An error occurred';
