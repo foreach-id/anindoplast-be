@@ -12,10 +12,10 @@ class KiriminAjaClient {
   private client: AxiosInstance;
 
   constructor() {
-    const baseURL =
-      process.env.KIRIMINAJA_ENV === 'production'
-        ? 'https://client.kiriminaja.com'
-        : 'https://tdev.kiriminaja.com';
+    const baseURL = process.env.KIRIMINAJA_API_URL;
+    if (!baseURL) {
+      throw new Error('KIRIMINAJA_API_URL is not set in environment variables');
+    }
 
     this.client = axios.create({
       baseURL,
@@ -61,8 +61,7 @@ class KiriminAjaClient {
           data: errData,
         });
         // Lempar pesan error dari KiriminAja agar bisa ditangkap service
-        const message =
-          errData?.text || errData?.message || error.message || 'KiriminAja API error';
+        const message = errData?.text || errData?.message || error.message || 'KiriminAja API error';
         throw new Error(message);
       },
     );

@@ -4,15 +4,6 @@ import { Prisma } from '@prisma/client';
 import { CreateOrderDTO, UpdateOrderDTO, OrderQueryDTO } from './order.types';
 
 export class OrderService {
-  // Helper function untuk generate delivery number
-  private static generateDeliveryNumber(): string {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 10000)
-      .toString()
-      .padStart(4, '0');
-    return `JX${timestamp}${random}`;
-  }
-
   static async create(data: CreateOrderDTO, userId: number | undefined) {
     if (typeof userId !== 'number') {
       throw new Error('User ID is required for creating Order');
@@ -39,15 +30,7 @@ export class OrderService {
     });
     if (!paymentMethod) throw new Error('Payment method not found or inactive');
 
-    // 4. Validasi service expedition (jika ada)
-    if (data.serviceExpeditionId) {
-      const serviceExpedition = await prisma.serviceExpedition.findFirst({
-        where: { id: data.serviceExpeditionId, deletedAt: null, isActive: true },
-      });
-      if (!serviceExpedition) throw new Error('Service expedition not found or inactive');
-    }
-
-    // 5. Validasi products dan hitung total
+    // 4. Validasi products dan hitung total
     let totalAmount = 0;
     const itemsWithSubtotal = await Promise.all(
       data.items.map(async (item) => {
@@ -64,6 +47,12 @@ export class OrderService {
 
         return {
           productId: item.productId,
+          productName: product.name,
+          productSku: product.sku,
+          productWeight: product.weight,
+          productWidth: product.width,
+          productHeight: product.height,
+          productLength: product.length,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           subtotal,
@@ -75,18 +64,39 @@ export class OrderService {
     const grandTotal = totalAmount + (data.shippingCost || 0);
 
     // 7. Generate Order Number dan Delivery Number
-    const orderNumber = `AMP${Date.now()}${Math.floor(Math.random() * 1000)}`;
-    const deliveryNumber = this.generateDeliveryNumber();
+    const orderNumber = `FOR-${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
-    // 8. Create Order + OrderItems dalam 1 transaksi
+    // 8. Create Order + OrderItems dalam 1 transaksi (dengan snapshot data)
     const newOrder = await prisma.order.create({
       data: {
         orderNumber,
-        deliveryNumber,
+
+        // Customer snapshot
         customerId: data.customerId,
+        customerName: customer.name,
+        customerPhone: customer.phone,
+        customerCountryCode: customer.countryCode,
+
+        // Address snapshot
         customerAddressId: data.customerAddressId,
+        customerAddressFull: customerAddress.address,
+        customerProvince: customerAddress.provinceName,
+        customerCity: customerAddress.cityName,
+        customerDistrict: customerAddress.districtName,
+        customerSubDistrict: customerAddress.subDistrictName,
+        customerZipCode: customerAddress.zipCode,
+
+        // Payment method snapshot
         paymentMethodId: data.paymentMethodId,
-        serviceExpeditionId: data.serviceExpeditionId,
+        paymentMethodName: paymentMethod.name,
+
+        // Service snapshot (dari payload)
+        service: data.service,
+        serviceName: data.serviceName,
+        serviceType: data.serviceType,
+        isCod: data.isCod,
+        isDropOff: data.isDropOff,
+
         shippingCost: data.shippingCost || 0,
         totalAmount,
         grandTotal,
@@ -95,31 +105,13 @@ export class OrderService {
         createdBy: userId,
         updatedBy: userId,
 
-        // Nested create OrderItems
+        // Nested create OrderItems dengan snapshot
         orderItems: {
           create: itemsWithSubtotal,
         },
       },
       include: {
-        orderItems: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                sku: true,
-              },
-            },
-          },
-        },
-        customer: true,
-        customerAddress: true,
-        paymentMethod: true,
-        serviceExpedition: {
-          include: {
-            expedition: true,
-          }
-        },
+        orderItems: true,
       },
     });
 
@@ -130,25 +122,7 @@ export class OrderService {
     const orders = await prisma.order.findMany({
       where: { deletedAt: null },
       include: {
-        customer: true,
-        customerAddress: true,
-        paymentMethod: true,
-        serviceExpedition: {
-          include: {
-            expedition: true,
-          }
-        },
-        orderItems: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                sku: true,
-              },
-            },
-          },
-        },
+        orderItems: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -167,7 +141,8 @@ export class OrderService {
     };
 
     if (search) {
-      whereClause.OR = [{ orderNumber: { contains: search } }, { customer: { name: { contains: search } } }, { customer: { phone: { contains: search } } }];
+      // Search by order number, customer name (snapshot), or customer phone (snapshot)
+      whereClause.OR = [{ orderNumber: { contains: search } }, { customerName: { contains: search } }, { customerPhone: { contains: search } }];
     }
 
     if (status) {
@@ -184,25 +159,7 @@ export class OrderService {
         skip: skip,
         take: limit,
         include: {
-          customer: true,
-          customerAddress: true,
-          paymentMethod: true,
-          serviceExpedition: {
-            include: {
-              expedition: true,
-            }
-          },
-          orderItems: {
-            include: {
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  sku: true,
-                },
-              },
-            },
-          },
+          orderItems: true,
         },
         orderBy: { createdAt: 'desc' },
       }),
@@ -224,26 +181,7 @@ export class OrderService {
     const order = await prisma.order.findFirst({
       where: { id, deletedAt: null },
       include: {
-        customer: true,
-        customerAddress: true,
-        paymentMethod: true,
-        serviceExpedition: {
-          include:{
-            expedition: true,
-          }
-        },
-        orderItems: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                sku: true,
-                price: true,
-              },
-            },
-          },
-        },
+        orderItems: true,
       },
     });
 
@@ -253,7 +191,6 @@ export class OrderService {
 
     return this.formatOrderResponse(order);
   }
-
 
   static async update(id: number, data: UpdateOrderDTO, userId: number | undefined) {
     // 1. Cek order exists
@@ -268,15 +205,26 @@ export class OrderService {
       throw new Error('Order not found');
     }
 
-    // 2. Validasi customer jika diubah
+    // Prepare snapshot data updates
+    let customerSnapshot: any = {};
+    let addressSnapshot: any = {};
+    let paymentMethodSnapshot: any = {};
+
+    // 2. Validasi customer jika diubah & ambil snapshot baru
     if (data.customerId && data.customerId !== order.customerId) {
       const customer = await prisma.customer.findUnique({
         where: { id: data.customerId },
       });
       if (!customer) throw new Error('Customer not found');
+
+      customerSnapshot = {
+        customerName: customer.name,
+        customerPhone: customer.phone,
+        customerCountryCode: customer.countryCode,
+      };
     }
 
-    // 3. Validasi customer address jika diubah
+    // 3. Validasi customer address jika diubah & ambil snapshot baru
     if (data.customerAddressId && data.customerAddressId !== order.customerAddressId) {
       const customerAddress = await prisma.customerAddress.findFirst({
         where: {
@@ -285,22 +233,37 @@ export class OrderService {
         },
       });
       if (!customerAddress) throw new Error('Customer address not found or does not belong to customer');
+
+      addressSnapshot = {
+        customerAddressFull: customerAddress.address,
+        customerProvince: customerAddress.provinceName,
+        customerCity: customerAddress.cityName,
+        customerDistrict: customerAddress.districtName,
+        customerSubDistrict: customerAddress.subDistrictName,
+        customerZipCode: customerAddress.zipCode,
+      };
     }
 
-    // 4. Validasi payment method jika diubah
+    // 4. Validasi payment method jika diubah & ambil snapshot baru
     if (data.paymentMethodId && data.paymentMethodId !== order.paymentMethodId) {
       const paymentMethod = await prisma.paymentMethod.findFirst({
         where: { id: data.paymentMethodId, deletedAt: null, isActive: true },
       });
       if (!paymentMethod) throw new Error('Payment method not found or inactive');
+
+      paymentMethodSnapshot = {
+        paymentMethodName: paymentMethod.name,
+      };
     }
 
-    // 5. Validasi service expedition jika diubah
-    if (data.serviceExpeditionId) {
-      const serviceExpedition = await prisma.serviceExpedition.findFirst({
-        where: { id: data.serviceExpeditionId, deletedAt: null, isActive: true },
-      });
-      if (!serviceExpedition) throw new Error('Service expedition not found or inactive');
+    // 5. Handle service data dari payload (tidak ada validasi karena dari API eksternal)
+    let serviceSnapshot: any = {};
+    if (data.service !== undefined || data.serviceName !== undefined || data.serviceType !== undefined) {
+      serviceSnapshot = {
+        service: data.service !== undefined ? data.service : order.service,
+        serviceName: data.serviceName !== undefined ? data.serviceName : order.serviceName,
+        serviceType: data.serviceType !== undefined ? data.serviceType : order.serviceType,
+      };
     }
 
     // 6. Handle Items Update (jika ada)
@@ -308,7 +271,7 @@ export class OrderService {
     let itemsOperations = [];
 
     if (data.items && data.items.length > 0) {
-      // Validasi semua products
+      // Validasi semua products & ambil snapshot
       const itemsWithSubtotal = await Promise.all(
         data.items.map(async (item) => {
           const product = await prisma.product.findFirst({
@@ -324,6 +287,12 @@ export class OrderService {
           return {
             id: item.id, // Jika ada = update, jika tidak = create
             productId: item.productId,
+            productName: product.name,
+            productSku: product.sku,
+            productWeight: product.weight,
+            productWidth: product.width,
+            productHeight: product.height,
+            productLength: product.length,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             subtotal,
@@ -336,22 +305,20 @@ export class OrderService {
 
       // Prepare operations untuk items
       // 1. Delete items yang tidak ada di input baru
-      const newItemIds = itemsWithSubtotal.filter(i => i.id).map(i => i.id);
-      const itemsToDelete = order.orderItems.filter(
-        (existingItem) => !newItemIds.includes(existingItem.id)
-      );
+      const newItemIds = itemsWithSubtotal.filter((i) => i.id).map((i) => i.id);
+      const itemsToDelete = order.orderItems.filter((existingItem) => !newItemIds.includes(existingItem.id));
 
       if (itemsToDelete.length > 0) {
         itemsOperations.push(
           prisma.orderItem.deleteMany({
             where: {
-              id: { in: itemsToDelete.map(i => i.id) },
+              id: { in: itemsToDelete.map((i) => i.id) },
             },
-          })
+          }),
         );
       }
 
-      // 2. Update atau Create items
+      // 2. Update atau Create items dengan snapshot
       itemsWithSubtotal.forEach((item) => {
         if (item.id) {
           // Update existing item
@@ -360,25 +327,37 @@ export class OrderService {
               where: { id: item.id },
               data: {
                 productId: item.productId,
+                productName: item.productName,
+                productSku: item.productSku,
+                productWeight: item.productWeight,
+                productWidth: item.productWidth,
+                productHeight: item.productHeight,
+                productLength: item.productLength,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,
                 subtotal: item.subtotal,
                 updatedAt: new Date(),
               },
-            })
+            }),
           );
         } else {
-          // Create new item
+          // Create new item dengan snapshot
           itemsOperations.push(
             prisma.orderItem.create({
               data: {
                 orderId: id,
                 productId: item.productId,
+                productName: item.productName,
+                productSku: item.productSku,
+                productWeight: item.productWeight,
+                productWidth: item.productWidth,
+                productHeight: item.productHeight,
+                productLength: item.productLength,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,
                 subtotal: item.subtotal,
               },
-            })
+            }),
           );
         }
       });
@@ -389,7 +368,7 @@ export class OrderService {
     const grandTotal = totalAmount + shippingCost;
 
     // 8. Generate delivery number jika belum ada
-    const deliveryNumber = order.deliveryNumber || this.generateDeliveryNumber();
+    const deliveryNumber = order.deliveryNumber;
 
     // 9. Execute transaction untuk update order dan items
     const [updatedOrder] = await prisma.$transaction([
@@ -398,40 +377,26 @@ export class OrderService {
         data: {
           deliveryNumber,
           customerId: data.customerId,
+          ...customerSnapshot,
           customerAddressId: data.customerAddressId,
+          ...addressSnapshot,
           paymentMethodId: data.paymentMethodId,
-          serviceExpeditionId: data.serviceExpeditionId,
+          ...paymentMethodSnapshot,
+          ...serviceSnapshot, // Spread service fields (service, serviceName, serviceType)
+          isCod: data.isCod,
+          isDropOff: data.isDropOff,
           shippingCost: shippingCost,
           totalAmount: data.items ? totalAmount : undefined, // Update total jika items berubah
           grandTotal: data.items || data.shippingCost !== undefined ? grandTotal : undefined,
-          status: data.status,
           notes: data.notes,
           updatedBy: userId,
           updatedAt: new Date(),
         },
         include: {
-          customer: true,
-          customerAddress: true,
-          paymentMethod: true,
-          serviceExpedition: {
-            include: {
-              expedition: true,
-            },
-          },
-          orderItems: {
-            include: {
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  sku: true,
-                },
-              },
-            },
-          },
+          orderItems: true,
         },
       }),
-      ...itemsOperations, 
+      ...itemsOperations,
     ]);
 
     return this.formatOrderResponse(updatedOrder);
@@ -467,32 +432,54 @@ export class OrderService {
       id: order.id,
       orderNumber: order.orderNumber,
       deliveryNumber: order.deliveryNumber,
+
+      // Customer snapshot (langsung dari order, bukan relasi)
       customerId: order.customerId,
-      customerName: order.customer.name,
-      customerPhone: order.customer.phone,
-      customerAddress: order.customerAddress.address,
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      customerCountryCode: order.customerCountryCode,
+
+      // Address snapshot
+      customerAddressId: order.customerAddressId,
+      customerAddressFull: order.customerAddressFull,
+      customerProvince: order.customerProvince,
+      customerCity: order.customerCity,
+      customerDistrict: order.customerDistrict,
+      customerSubDistrict: order.customerSubDistrict,
+      customerZipCode: order.customerZipCode,
+
+      // Payment method snapshot
       paymentMethodId: order.paymentMethodId,
-      paymentMethodName: order.paymentMethod.name,
-      serviceExpeditionId: order.serviceExpeditionId,
-      serviceExpeditionName: order.serviceExpedition?.name,
-      expeditionId: order.serviceExpedition?.expeditionId, 
-      expeditionName: order.serviceExpedition?.expedition?.name, 
-      expeditionCode: order.serviceExpedition?.expedition?.code,
+      paymentMethodName: order.paymentMethodName,
+
+      // Service snapshot (dari payload API eksternal)
+      service: order.service,
+      serviceName: order.serviceName,
+      serviceType: order.serviceType,
+      isCod: order.isCod,
+      isDropOff: order.isDropOff,
       orderDate: order.orderDate,
       totalAmount: order.totalAmount.toNumber(),
       shippingCost: order.shippingCost.toNumber(),
       grandTotal: order.grandTotal.toNumber(),
       status: order.status,
       notes: order.notes,
+
+      // Order items dengan snapshot product data
       orderItems: order.orderItems.map((item: any) => ({
         id: item.id,
         productId: item.productId,
-        productName: item.product.name,
-        productSku: item.product.sku,
+        productName: item.productName,
+        productSku: item.productSku,
+        productWeight: item.productWeight,
+        productWidth: item.productWidth,
+        productHeight: item.productHeight,
+        productLength: item.productLength,
         quantity: item.quantity,
         unitPrice: item.unitPrice.toNumber(),
         subtotal: item.subtotal.toNumber(),
       })),
+
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
     };

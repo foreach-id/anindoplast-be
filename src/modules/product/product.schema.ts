@@ -12,6 +12,7 @@ export const productSchemas = {
       width: z.number().nonnegative().optional(),
       height: z.number().nonnegative().optional(),
       length: z.number().nonnegative().optional(),
+      categoryId: z.number().int().positive().min(1, 'Category Id must be filled'),
     }),
   }),
 
@@ -29,6 +30,7 @@ export const productSchemas = {
       width: z.number().nonnegative().optional(),
       height: z.number().nonnegative().optional(),
       length: z.number().nonnegative().optional(),
+      categoryId: z.number().int().positive().min(1, 'Category Id must be filled'),
     }),
   }),
 

@@ -16,63 +16,117 @@ router.use(AuthMiddleware.authorize([UserRole.SUPER_ADMIN, UserRole.ADMIN]));
  * Cek ongkir dari origin ke destination sebelum buat shipment
  * Body: { originDistrictId, destinationDistrictId, weightGram, itemValue?, cod? }
  */
-router.post(
-  '/check-rate',
-  validate(kiriminAjaSchemas.checkRate),
-  KiriminAjaController.checkRate,
-);
+router.post('/check-rate', validate(kiriminAjaSchemas.checkRate), KiriminAjaController.checkRate);
 
 /**
- * POST /api/shipping/create
- * Buat shipment ke KiriminAja → AWB tersimpan ke orders.delivery_number
- * Body: { orderId, service, serviceType, receiverKecamatanId, receiverKelurahanId,
- *         receiverZipcode, shippingCost, cod, schedule? }
+ * POST /api/shipping/process/:id
+ * Proses order ke KiriminAja — FE hanya perlu kirim order ID
+ * Semua data (customer, alamat, service, items) diambil otomatis dari order
  */
-router.post(
-  '/create',
-  validate(kiriminAjaSchemas.createShipment),
-  KiriminAjaController.createShipment,
-);
+router.post('/process/:id', validate(kiriminAjaSchemas.processOrder), KiriminAjaController.processOrder);
 
 /**
  * GET /api/shipping/track/awb/:awb
  * Tracking paket berdasarkan nomor resi / AWB
  */
-router.get(
-  '/track/awb/:awb',
-  validate(kiriminAjaSchemas.trackByAwb),
-  KiriminAjaController.trackByAwb,
-);
+router.get('/track/awb/:awb', validate(kiriminAjaSchemas.trackByAwb), KiriminAjaController.trackByAwb);
 
 /**
  * GET /api/shipping/track/order/:id
  * Tracking paket berdasarkan order ID internal (ambil AWB dari DB)
  */
-router.get(
-  '/track/order/:id',
-  validate(kiriminAjaSchemas.trackByOrderId),
-  KiriminAjaController.trackByOrderId,
-);
+router.get('/track/order/:id', validate(kiriminAjaSchemas.trackByOrderId), KiriminAjaController.trackByOrderId);
+
+/**
+ * POST /api/shipping/cancel/awb
+ * Batalkan paket ke KiriminAja berdasarkan nomor AWB
+ * Harus SEBELUM /cancel/:id agar tidak tertangkap sebagai param :id
+ * Body: { awb, reason }
+ */
+router.post('/cancel/awb', validate(kiriminAjaSchemas.cancelByAwb), KiriminAjaController.cancelByAwb);
 
 /**
  * POST /api/shipping/cancel/:id
  * Batalkan shipment ke KiriminAja berdasarkan order ID internal
  * Body: { reason? }
  */
-router.post(
-  '/cancel/:id',
-  validate(kiriminAjaSchemas.cancelShipment),
-  KiriminAjaController.cancelShipment,
-);
+router.post('/cancel/:id', validate(kiriminAjaSchemas.cancelShipment), KiriminAjaController.cancelShipment);
 
 /**
- * GET /api/shipping/district/search?keyword=xxx
- * Cari kecamatan / kelurahan KiriminAja untuk dropdown pilih area
+ * GET /api/shipping/location/provinces
  */
-router.get(
-  '/district/search',
-  validate(kiriminAjaSchemas.searchDistrict),
-  KiriminAjaController.searchDistrict,
-);
+router.get('/location/provinces', validate(kiriminAjaSchemas.getProvinces), KiriminAjaController.getProvinces);
+
+/**
+ * GET /api/shipping/location/cities?provinceId=xxx
+ */
+router.get('/location/cities', validate(kiriminAjaSchemas.getCities), KiriminAjaController.getCities);
+
+/**
+ * GET /api/shipping/location/districts?cityId=xxx
+ */
+router.get('/location/districts', validate(kiriminAjaSchemas.getDistricts), KiriminAjaController.getDistricts);
+
+/**
+ * GET /api/shipping/location/subdistricts?districtId=xxx
+ */
+router.get('/location/subdistricts', validate(kiriminAjaSchemas.getSubdistrict), KiriminAjaController.getSubdistrict);
+
+/**
+ * GET /api/shipping/location/address?search=xxx
+ */
+router.get('/location/address', validate(kiriminAjaSchemas.searchAddress), KiriminAjaController.searchAddress);
+
+/**
+ * POST /api/shipping/shipping-price
+ * Cek ongkir menggunakan API v6.1
+ */
+router.post('/shipping_price', validate(kiriminAjaSchemas.getShippingPrice), KiriminAjaController.getShippingPrice);
+
+/**
+ * POST /api/shipping/cancel/awb
+ * Batalkan paket ke KiriminAja berdasarkan nomor AWB
+ * Berbeda dengan /cancel/:id yang pakai order ID internal
+ * Body: { awb, reason }
+ */
+router.post('/cancel/awb', validate(kiriminAjaSchemas.cancelByAwb), KiriminAjaController.cancelByAwb);
+
+/**
+ * GET /api/shipping/pickup-schedule
+ * Ambil jadwal pickup yang tersedia dari KiriminAja
+ */
+router.get('/pickup-schedule', validate(kiriminAjaSchemas.getPickupSchedule), KiriminAjaController.getPickupSchedule);
+
+/**
+ * GET /api/shipping/couriers
+ * Daftar kurir aktif di KiriminAja
+ */
+router.get('/couriers', validate(kiriminAjaSchemas.getCouriers), KiriminAjaController.getCouriers);
+
+/**
+ * GET /api/shipping/courier-groups
+ * Daftar grup layanan kurir
+ */
+router.get('/courier-groups', validate(kiriminAjaSchemas.getCourierGroups), KiriminAjaController.getCourierGroups);
+
+/**
+ * GET /api/shipping/courier-detail?code=jne
+ * Detail layanan per kurir
+ */
+router.get('/courier-detail', validate(kiriminAjaSchemas.getCourierDetail), KiriminAjaController.getCourierDetail);
+
+/**
+ * POST /api/shipping/courier-preference
+ * Set whitelist kurir. Body: { services: ["jne","jnt","sicepat"] }
+ * Kirim body kosong {} untuk reset ke semua kurir
+ */
+router.post('/courier-preference', validate(kiriminAjaSchemas.setCourierPreference), KiriminAjaController.setCourierPreference);
+
+/**
+ * POST /api/shipping/track/express
+ * Tracking Order Express by Order ID atau AWB
+ * Body: { order_id: "OID-xxx" } — maks 20 karakter
+ */
+router.post('/track/express', validate(kiriminAjaSchemas.trackOrderExpress), KiriminAjaController.trackOrderExpress);
 
 export const kiriminAjaRoutes = router;

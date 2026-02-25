@@ -12,7 +12,7 @@ export interface ProductIdParamDTO {
   id: number;
 }
 
-export interface ProductDTO {
+export interface ProductResponseDTO {
   id: number;
   name: string;
   sku: string;
@@ -23,23 +23,14 @@ export interface ProductDTO {
   width?: number;
   height?: number;
   length?: number;
+  categoryId?: number | null;
+  categoryName?: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;
-  createdBy: number;
-  updatedBy?: number | null;
-  deletedBy?: number | null;
-}
-
-export interface ProductResponseDTO extends ProductDTO {
-  creator?: {
-    id: number;
-    name: string;
-  };
-  updater?: {
-    id: number;
-    name: string;
-  } | null;
+  createdBy: string;
+  updatedBy?: string | null;
+  deletedBy?: string | null;
 }
 
 export interface ProductsListResponseDTO {

@@ -15,6 +15,10 @@ export interface OrderItemDTO {
   productId: number;
   productName: string;
   productSku: string;
+  productWeight?: number | null;
+  productWidth?: number | null;
+  productHeight?: number | null;
+  productLength?: number | null;
   quantity: number;
   unitPrice: number;
   subtotal: number;
@@ -31,23 +35,39 @@ export interface OrderItemInput {
 export interface OrderResponseDTO {
   id: number;
   orderNumber: string;
+  deliveryNumber?: string | null;
+
   customerId: number;
   customerName: string;
   customerPhone: string;
-  customerAddress: string;
+  customerCountryCode: string;
+
+  customerAddressId: number;
+  customerAddressFull: string;
+  customerProvince: string;
+  customerCity: string;
+  customerDistrict: string;
+  customerSubDistrict: string;
+  customerZipCode: string;
+
   paymentMethodId: number;
   paymentMethodName: string;
-  serviceExpeditionId?: number;
-  serviceExpeditionName?: string;
-  expeditionId?: number;
-  expeditionName?: string;
+
+  service?: string | null;
+  serviceName?: string | null;
+  serviceType?: string | null;
+  isCod: boolean;
+  isDropOff: boolean;
+
   orderDate: Date;
   totalAmount: number;
   shippingCost: number;
   grandTotal: number;
   status: OrderStatus;
-  notes?: string;
+  notes?: string | null;
+
   orderItems: OrderItemDTO[];
+
   createdAt: Date;
   updatedAt: Date;
 }

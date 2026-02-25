@@ -9,19 +9,38 @@ export class ProductService {
         deletedAt: null,
       },
       include: {
-        creator: { select: { id: true, name: true } },
+        creator: { select: { name: true } },
+        updater: { select: { name: true } },
+        deleter: { select: { name: true } },
+        category: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
 
     return products.map((product) => ({
-      ...product,
+      id: product.id,
+      name: product.name,
+      sku: product.sku,
       price: product.price.toNumber(),
+      description: product.description,
+      isActive: product.isActive,
+      weight: product.weight,
+      width: product.width,
+      height: product.height,
+      length: product.length,
+      categoryId: product.categoryId,
+      categoryName: product.category?.name || null,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+      deletedAt: product.deletedAt,
+      createdBy: product.creator.name,
+      updatedBy: product.updater?.name || null,
+      deletedBy: product.deleter?.name || null,
     }));
   }
 
   static async getPaginated(query: ProductQueryDTO) {
-    const {search, isActive } = query;
+    const { search, isActive } = query;
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -45,15 +64,34 @@ export class ProductService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          creator: { select: { id: true, name: true } },
+          creator: { select: { name: true } },
+          updater: { select: { name: true } },
+          deleter: { select: { name: true } },
+          category: { select: { name: true } },
         },
       }),
       prisma.product.count({ where: whereClause }),
     ]);
 
     const transformedProducts = data.map((product) => ({
-      ...product,
+      id: product.id,
+      name: product.name,
+      sku: product.sku,
       price: product.price.toNumber(),
+      description: product.description,
+      isActive: product.isActive,
+      weight: product.weight,
+      width: product.width,
+      height: product.height,
+      length: product.length,
+      categoryId: product.categoryId,
+      categoryName: product.category?.name || null,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+      deletedAt: product.deletedAt,
+      createdBy: product.creator.name,
+      updatedBy: product.updater?.name || null,
+      deletedBy: product.deleter?.name || null,
     }));
 
     return {
@@ -74,8 +112,10 @@ export class ProductService {
         deletedAt: null,
       },
       include: {
-        creator: { select: { id: true, name: true } },
-        updater: { select: { id: true, name: true } },
+        creator: { select: { name: true } },
+        updater: { select: { name: true } },
+        deleter: { select: { name: true } },
+        category: { select: { name: true } },
       },
     });
 
@@ -84,8 +124,24 @@ export class ProductService {
     }
 
     return {
-      ...product,
+      id: product.id,
+      name: product.name,
+      sku: product.sku,
       price: product.price.toNumber(),
+      description: product.description,
+      isActive: product.isActive,
+      weight: product.weight,
+      width: product.width,
+      height: product.height,
+      length: product.length,
+      categoryId: product.categoryId,
+      categoryName: product.category?.name || null,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+      deletedAt: product.deletedAt,
+      createdBy: product.creator.name,
+      updatedBy: product.updater?.name || null,
+      deletedBy: product.deleter?.name || null,
     };
   }
 
@@ -114,16 +170,38 @@ export class ProductService {
         width: data.width,
         height: data.height,
         length: data.length,
+        categoryId: data.categoryId,
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: userId,
         updatedBy: userId,
       },
+      include: {
+        creator: { select: { name: true } },
+        updater: { select: { name: true } },
+        category: { select: { name: true } },
+      },
     });
 
     return {
-      ...newProduct,
+      id: newProduct.id,
+      name: newProduct.name,
+      sku: newProduct.sku,
       price: newProduct.price.toNumber(),
+      description: newProduct.description,
+      isActive: newProduct.isActive,
+      weight: newProduct.weight,
+      width: newProduct.width,
+      height: newProduct.height,
+      length: newProduct.length,
+      categoryId: newProduct.categoryId,
+      categoryName: newProduct.category?.name || null,
+      createdAt: newProduct.createdAt,
+      updatedAt: newProduct.updatedAt,
+      deletedAt: newProduct.deletedAt,
+      createdBy: newProduct.creator.name,
+      updatedBy: newProduct.updater?.name || null,
+      deletedBy: null,
     };
   }
 
@@ -161,14 +239,37 @@ export class ProductService {
         width: data.width,
         height: data.height,
         length: data.length,
+        categoryId: data.categoryId,
         updatedAt: new Date(),
         updatedBy: userId,
+      },
+      include: {
+        creator: { select: { name: true } },
+        updater: { select: { name: true } },
+        deleter: { select: { name: true } },
+        category: { select: { name: true } },
       },
     });
 
     return {
-      ...updatedProduct,
+      id: updatedProduct.id,
+      name: updatedProduct.name,
+      sku: updatedProduct.sku,
       price: updatedProduct.price.toNumber(),
+      description: updatedProduct.description,
+      isActive: updatedProduct.isActive,
+      weight: updatedProduct.weight,
+      width: updatedProduct.width,
+      height: updatedProduct.height,
+      length: updatedProduct.length,
+      categoryId: updatedProduct.categoryId,
+      categoryName: updatedProduct.category?.name || null,
+      createdAt: updatedProduct.createdAt,
+      updatedAt: updatedProduct.updatedAt,
+      deletedAt: updatedProduct.deletedAt,
+      createdBy: updatedProduct.creator.name,
+      updatedBy: updatedProduct.updater?.name || null,
+      deletedBy: updatedProduct.deleter?.name || null,
     };
   }
 
