@@ -161,4 +161,109 @@ export class KiriminAjaController {
       return res.status(statusCodes.BAD_REQUEST).json(responseTemplates.error(message));
     }
   }
+
+  /**
+   * POST /api/shipping/cancel/awb
+   * Batalkan paket ke KiriminAja berdasarkan nomor AWB
+   * Body: { awb, reason }
+   * Catatan: hanya berlaku untuk paket yang belum dijemput kurir
+   */
+  static async cancelByAwb(req: Request, res: Response) {
+    try {
+      const { awb, reason } = req.body;
+      const result = await KiriminAjaService.cancelByAwb(awb, reason);
+      return res.status(statusCodes.OK).json(responseTemplates.success(result, 'Shipment cancelled successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.BAD_REQUEST).json(responseTemplates.error(message));
+    }
+  }
+
+  /**
+   * GET /api/shipping/pickup-schedule
+   * Ambil jadwal pickup yang tersedia dari KiriminAja
+   */
+  static async getPickupSchedule(_req: Request, res: Response) {
+    try {
+      const result = await KiriminAjaService.getPickupSchedule();
+      return res.status(statusCodes.OK).json(responseTemplates.success(result.schedules, 'Pickup schedules retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(responseTemplates.error(message));
+    }
+  }
+
+  /**
+   * GET /api/shipping/couriers
+   * Daftar kurir aktif di KiriminAja
+   */
+  static async getCouriers(_req: Request, res: Response) {
+    try {
+      const result = await KiriminAjaService.getCouriers();
+      return res.status(statusCodes.OK).json(responseTemplates.success(result.datas, 'Courier list retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(responseTemplates.error(message));
+    }
+  }
+
+  /**
+   * GET /api/shipping/courier-groups
+   * Daftar grup layanan kurir (Regular, One Day, Next Day, Ekonomi, dll)
+   */
+  static async getCourierGroups(_req: Request, res: Response) {
+    try {
+      const result = await KiriminAjaService.getCourierGroups();
+      return res.status(statusCodes.OK).json(responseTemplates.success(result.datas, 'Courier groups retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(responseTemplates.error(message));
+    }
+  }
+
+  /**
+   * GET /api/shipping/courier-detail?code=jne
+   * Detail layanan per kurir (kode service, nama layanan)
+   */
+  static async getCourierDetail(req: Request, res: Response) {
+    try {
+      const { code } = req.query as { code: string };
+      const result = await KiriminAjaService.getCourierDetail(code);
+      return res.status(statusCodes.OK).json(responseTemplates.success(result.datas, 'Courier detail retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(responseTemplates.error(message));
+    }
+  }
+
+  /**
+   * POST /api/shipping/courier-preference
+   * Set whitelist kurir. Body: { services: ["jne","jnt"] } atau {} untuk reset.
+   */
+  static async setCourierPreference(req: Request, res: Response) {
+    try {
+      const services = req.body?.services ?? null;
+      const result = await KiriminAjaService.setCourierPreference(services);
+      return res.status(statusCodes.OK).json(responseTemplates.success(result, 'Courier preference updated successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.BAD_REQUEST).json(responseTemplates.error(message));
+    }
+  }
+
+  /**
+   * POST /api/shipping/track/express
+   * Tracking Order Express by Order ID atau AWB
+   * Body: { order_id: "OID-xxx" | "AWB-xxx" }
+   */
+  static async trackOrderExpress(req: Request, res: Response) {
+    try {
+      const { order_id } = req.body;
+      const result = await KiriminAjaService.trackOrderExpress(order_id);
+      return res.status(statusCodes.OK).json(responseTemplates.success(result, 'Tracking retrieved successfully'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      return res.status(statusCodes.BAD_REQUEST).json(responseTemplates.error(message));
+    }
+  }
 }

@@ -96,4 +96,43 @@ export const kiriminAjaSchemas = {
       courier: z.array(z.string()).optional(),
     }),
   }),
+
+  // POST /api/shipping/cancel/awb
+  cancelByAwb: z.object({
+    body: z.object({
+      awb: z.string().min(1, 'AWB wajib diisi').max(30, 'AWB maksimal 30 karakter'),
+      reason: z.string().min(5, 'Alasan minimal 5 karakter').max(200, 'Alasan maksimal 200 karakter'),
+    }),
+  }),
+
+  // GET /api/shipping/pickup-schedule
+  getPickupSchedule: z.object({}),
+
+  // GET /api/shipping/couriers
+  getCouriers: z.object({}),
+
+  // GET /api/shipping/courier-groups
+  getCourierGroups: z.object({}),
+
+  // GET /api/shipping/courier-detail?code=jne
+  getCourierDetail: z.object({
+    query: z.object({
+      code: z.string().min(1, 'Courier code wajib diisi'),
+    }),
+  }),
+
+  // POST /api/shipping/courier-preference
+  setCourierPreference: z.object({
+    body: z.object({
+      services: z.array(z.string()).nullable().optional(),
+    }),
+  }),
+
+  // POST /api/shipping/track/express
+  // order_id bisa berupa Order ID atau AWB (maks 20 karakter)
+  trackOrderExpress: z.object({
+    body: z.object({
+      order_id: z.string().min(1, 'order_id wajib diisi').max(20, 'order_id maksimal 20 karakter'),
+    }),
+  }),
 };

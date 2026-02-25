@@ -249,6 +249,41 @@ export interface CancelOrderResponse {
 }
 
 // ============================================================
+// CANCEL ORDER EXPRESS BY AWB - POST /api/mitra/v3/cancel_shipment
+// Docs: https://developer.kiriminaja.com/docs/express/cancel
+// ============================================================
+
+export interface CancelByAwbRequest {
+  awb: string;    // AWB Number (bukan order_id internal)
+  reason: string; // min:5, max:200
+}
+
+export interface CancelByAwbResponse {
+  status: boolean;
+  text: string;
+  method: string;
+}
+
+// ============================================================
+// PICKUP SCHEDULE - POST /api/mitra/v2/schedules
+// Docs: https://developer.kiriminaja.com/docs/pickup
+// ============================================================
+
+export interface PickupScheduleSlot {
+  clock: string;     // "2021-02-15 14:00:00"
+  until: string;     // "16:00"
+  expired: number;   // unix timestamp
+  libur: boolean;
+}
+
+export interface PickupScheduleResponse {
+  status: boolean;
+  method: string;
+  text: string;
+  schedules: PickupScheduleSlot[];
+}
+
+// ============================================================
 // COVERAGE AREA SEARCH
 // GET /api/mitra/v2/district/search?keyword=xxx
 // ============================================================
@@ -349,3 +384,103 @@ export interface CheckRateDTO {
   itemValue?: number;
   cod?: boolean;
 }
+
+// ============================================================
+// COURIER LIST
+// POST /api/mitra/couriers
+// ============================================================
+
+export interface CourierItem {
+  code: string;
+  name: string;
+  type: string;
+}
+
+export interface CourierListResponse {
+  status: boolean;
+  method: string;
+  text: string;
+  datas: CourierItem[];
+}
+
+// ============================================================
+// COURIER GROUP
+// POST /api/mitra/couriers_group
+// ============================================================
+
+export interface CourierGroupItem {
+  code: string;
+  name: string;
+}
+
+export interface CourierGroupResponse {
+  status: boolean;
+  method: string;
+  text: string;
+  datas: CourierGroupItem[];
+}
+
+// ============================================================
+// COURIER DETAIL (services per courier)
+// POST /api/mitra/courier_services
+// ============================================================
+
+export interface CourierServiceItem {
+  name: string;
+  code: string;
+}
+
+export interface CourierDetailResponse {
+  status: boolean;
+  method: string;
+  text: string;
+  datas: CourierServiceItem[];
+}
+
+// ============================================================
+// SET COURIER PREFERENCE (whitelist)
+// POST /api/mitra/v3/set_whitelist_services
+// ============================================================
+
+export interface SetCourierPreferenceResponse {
+  status: boolean;
+  method: string;
+  text: string;
+  data: Record<string, unknown>;
+}
+
+// ============================================================
+// TRACKING ORDER EXPRESS
+// POST /api/mitra/tracking
+// order_id bisa berupa Order ID atau AWB
+// ============================================================
+
+export interface TrackingHistory {
+  status: string;
+  date: string;
+  description: string;
+  city?: string;
+}
+
+export interface TrackingCostDetail {
+  name: string;
+  value: number;
+}
+
+export interface TrackingOriginDetail {
+  name: string;
+  value: string;
+}
+
+export interface TrackingOrderExpressResponse {
+  status: boolean;
+  text: string;
+  method: string;
+  status_code: number;
+  details: {
+    costs: TrackingCostDetail[];
+    origin?: TrackingOriginDetail[];
+  };
+  histories: TrackingHistory[];
+}
+

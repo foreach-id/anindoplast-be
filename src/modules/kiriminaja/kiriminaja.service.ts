@@ -9,6 +9,8 @@ import {
   KiriminAjaPackage,
   TrackingResponse,
   CancelOrderResponse,
+  CancelByAwbResponse,
+  PickupScheduleResponse,
   ShipperConfig,
   ProvinceResponse,
   CityResponse,
@@ -16,6 +18,11 @@ import {
   AddressSearchResponse,
   ShippingPriceDTO,
   ShippingPriceResponse,
+  CourierListResponse,
+  CourierGroupResponse,
+  CourierDetailResponse,
+  SetCourierPreferenceResponse,
+  TrackingOrderExpressResponse,
 } from './kiriminaja.types';
 
 function getShipperConfig(): ShipperConfig {
@@ -288,6 +295,89 @@ export class KiriminAjaService {
       item_value: String(dto.itemValue),
       insurance: dto.insurance ?? 0,
       ...(dto.courier && dto.courier.length > 0 && { courier: dto.courier }),
+    });
+  }
+
+  // ------------------------------------------------------------------
+  // 12. CANCEL ORDER EXPRESS BY AWB
+  // POST /api/mitra/v3/cancel_shipment
+  // Berbeda dengan cancelShipment (by order ID internal),
+  // endpoint ini pakai AWB langsung sesuai docs KiriminAja.
+  // ------------------------------------------------------------------
+  static async cancelByAwb(awb: string, reason: string): Promise<CancelByAwbResponse> {
+    const response = await kiriminAjaClient.post<CancelByAwbResponse>('/api/mitra/v3/cancel_shipment', {
+      awb,
+      reason,
+    });
+
+    if (!response.status) {
+      throw new Error(`KiriminAja gagal membatalkan paket: ${response.text}`);
+    }
+
+    // Update status order di DB berdasarkan AWB (deliveryNumber)
+    await prisma.order.updateMany({
+      where: { deliveryNumber: awb, deletedAt: null },
+      data: { status: 'CANCELLED' },
+    });
+
+    return response;
+  }
+
+  // ------------------------------------------------------------------
+  // 13. PICKUP SCHEDULE
+  // POST /api/mitra/v2/schedules
+  // Ambil jadwal pickup yang tersedia dari KiriminAja
+  // ------------------------------------------------------------------
+  static async getPickupSchedule(): Promise<PickupScheduleResponse> {
+    return kiriminAjaClient.post<PickupScheduleResponse>('/api/mitra/v2/schedules');
+  }
+
+  // ------------------------------------------------------------------
+  // 14. COURIER LIST
+  // POST /api/mitra/couriers
+  // ------------------------------------------------------------------
+  static async getCouriers(): Promise<CourierListResponse> {
+    return kiriminAjaClient.post<CourierListResponse>('/api/mitra/couriers');
+  }
+
+  // ------------------------------------------------------------------
+  // 15. COURIER GROUP
+  // POST /api/mitra/couriers_group
+  // ------------------------------------------------------------------
+  static async getCourierGroups(): Promise<CourierGroupResponse> {
+    return kiriminAjaClient.post<CourierGroupResponse>('/api/mitra/couriers_group');
+  }
+
+  // ------------------------------------------------------------------
+  // 16. COURIER DETAIL (layanan per kurir)
+  // POST /api/mitra/courier_services
+  // Body: { courier_code }
+  // ------------------------------------------------------------------
+  static async getCourierDetail(courierCode: string): Promise<CourierDetailResponse> {
+    return kiriminAjaClient.post<CourierDetailResponse>('/api/mitra/courier_services', {
+      courier_code: courierCode,
+    });
+  }
+
+  // ------------------------------------------------------------------
+  // 17. SET COURIER PREFERENCE (whitelist ekspedisi)
+  // POST /api/mitra/v3/set_whitelist_services
+  // Body: { services: string[] } — null/kosong untuk reset
+  // ------------------------------------------------------------------
+  static async setCourierPreference(services: string[] | null): Promise<SetCourierPreferenceResponse> {
+    return kiriminAjaClient.post<SetCourierPreferenceResponse>('/api/mitra/v3/set_whitelist_services', {
+      services,
+    });
+  }
+
+  // ------------------------------------------------------------------
+  // 18. TRACKING ORDER EXPRESS
+  // POST /api/mitra/tracking
+  // order_id bisa berupa Order ID atau AWB
+  // ------------------------------------------------------------------
+  static async trackOrderExpress(orderId: string): Promise<TrackingOrderExpressResponse> {
+    return kiriminAjaClient.post<TrackingOrderExpressResponse>('/api/mitra/tracking', {
+      order_id: orderId,
     });
   }
 }

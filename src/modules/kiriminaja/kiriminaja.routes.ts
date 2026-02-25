@@ -38,6 +38,14 @@ router.get('/track/awb/:awb', validate(kiriminAjaSchemas.trackByAwb), KiriminAja
 router.get('/track/order/:id', validate(kiriminAjaSchemas.trackByOrderId), KiriminAjaController.trackByOrderId);
 
 /**
+ * POST /api/shipping/cancel/awb
+ * Batalkan paket ke KiriminAja berdasarkan nomor AWB
+ * Harus SEBELUM /cancel/:id agar tidak tertangkap sebagai param :id
+ * Body: { awb, reason }
+ */
+router.post('/cancel/awb', validate(kiriminAjaSchemas.cancelByAwb), KiriminAjaController.cancelByAwb);
+
+/**
  * POST /api/shipping/cancel/:id
  * Batalkan shipment ke KiriminAja berdasarkan order ID internal
  * Body: { reason? }
@@ -74,5 +82,51 @@ router.get('/location/address', validate(kiriminAjaSchemas.searchAddress), Kirim
  * Cek ongkir menggunakan API v6.1
  */
 router.post('/shipping_price', validate(kiriminAjaSchemas.getShippingPrice), KiriminAjaController.getShippingPrice);
+
+/**
+ * POST /api/shipping/cancel/awb
+ * Batalkan paket ke KiriminAja berdasarkan nomor AWB
+ * Berbeda dengan /cancel/:id yang pakai order ID internal
+ * Body: { awb, reason }
+ */
+router.post('/cancel/awb', validate(kiriminAjaSchemas.cancelByAwb), KiriminAjaController.cancelByAwb);
+
+/**
+ * GET /api/shipping/pickup-schedule
+ * Ambil jadwal pickup yang tersedia dari KiriminAja
+ */
+router.get('/pickup-schedule', validate(kiriminAjaSchemas.getPickupSchedule), KiriminAjaController.getPickupSchedule);
+
+/**
+ * GET /api/shipping/couriers
+ * Daftar kurir aktif di KiriminAja
+ */
+router.get('/couriers', validate(kiriminAjaSchemas.getCouriers), KiriminAjaController.getCouriers);
+
+/**
+ * GET /api/shipping/courier-groups
+ * Daftar grup layanan kurir
+ */
+router.get('/courier-groups', validate(kiriminAjaSchemas.getCourierGroups), KiriminAjaController.getCourierGroups);
+
+/**
+ * GET /api/shipping/courier-detail?code=jne
+ * Detail layanan per kurir
+ */
+router.get('/courier-detail', validate(kiriminAjaSchemas.getCourierDetail), KiriminAjaController.getCourierDetail);
+
+/**
+ * POST /api/shipping/courier-preference
+ * Set whitelist kurir. Body: { services: ["jne","jnt","sicepat"] }
+ * Kirim body kosong {} untuk reset ke semua kurir
+ */
+router.post('/courier-preference', validate(kiriminAjaSchemas.setCourierPreference), KiriminAjaController.setCourierPreference);
+
+/**
+ * POST /api/shipping/track/express
+ * Tracking Order Express by Order ID atau AWB
+ * Body: { order_id: "OID-xxx" } — maks 20 karakter
+ */
+router.post('/track/express', validate(kiriminAjaSchemas.trackOrderExpress), KiriminAjaController.trackOrderExpress);
 
 export const kiriminAjaRoutes = router;
