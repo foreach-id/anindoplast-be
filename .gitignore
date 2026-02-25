@@ -9,3 +9,6 @@
 # Editor folders
 .vscode/
 .idea/
+
+# claude
+CLAUDE.md
