@@ -88,7 +88,6 @@ export const kiriminAjaSchemas = {
   // POST /api/shipping/shipping-price
   getShippingPrice: z.object({
     body: z.object({
-      origin: z.number().int().positive('Origin kecamatan ID wajib diisi'),
       destination: z.number().int().positive('Destination kecamatan ID wajib diisi'),
       weight: z.number().int().positive('Berat harus lebih dari 0 gram'),
       itemValue: z.number().nonnegative('Nilai barang tidak boleh negatif'),
