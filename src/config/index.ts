@@ -102,8 +102,10 @@ const config: IConfig = {
   // Cookie configuration (for refresh token)
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    // Secure: true if in production AND not explicitly disabled
+    secure: process.env.NODE_ENV === 'production' && process.env.COOKIE_SECURE !== 'false',
+    // sameSite: 'none' for cross-origin in production, 'lax' for development
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
     path: '/api/auth',
   },
