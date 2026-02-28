@@ -289,7 +289,7 @@ export class KiriminAjaService {
   // ------------------------------------------------------------------
   static async getShippingPrice(dto: ShippingPriceDTO): Promise<ShippingPriceResponse> {
     return kiriminAjaClient.post<ShippingPriceResponse>('/api/mitra/v6.1/shipping_price', {
-      origin: dto.origin,
+      origin: process.env.SHIPPER_KECAMATAN_ID,
       destination: dto.destination,
       weight: dto.weight,
       item_value: String(dto.itemValue),

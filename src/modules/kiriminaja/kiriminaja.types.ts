@@ -37,7 +37,6 @@ export interface CheckPricingResponse {
 // ============================================================
 
 export interface ShippingPriceDTO {
-  origin: number; // kecamatan_id asal
   destination: number; // kecamatan_id tujuan
   weight: number; // gram
   itemValue: number; // nilai barang
