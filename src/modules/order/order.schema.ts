@@ -12,6 +12,7 @@ export const orderSchemas = {
       isCod: z.boolean().default(false),
       isDropOff: z.boolean().default(false),
       shippingCost: z.number().min(0).default(0),
+      addCost: z.number().default(0),
       notes: z.string().optional(),
 
       // Nested OrderItems
@@ -41,6 +42,7 @@ export const orderSchemas = {
       isCod: z.boolean().optional(),
       isDropOff: z.boolean().default(false),
       shippingCost: z.number().min(0).optional(),
+      addCost: z.number().optional(),
       notes: z.string().optional(),
       items: z
         .array(

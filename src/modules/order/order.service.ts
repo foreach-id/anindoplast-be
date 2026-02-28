@@ -61,7 +61,7 @@ export class OrderService {
     );
 
     // 6. Hitung grand total
-    const grandTotal = totalAmount + (data.shippingCost || 0);
+    const grandTotal = totalAmount + (data.shippingCost || 0) + (data.addCost || 0);
 
     // 7. Generate Order Number dan Delivery Number
     const orderNumber = `FOR-${Date.now()}${Math.floor(Math.random() * 1000)}`;
@@ -98,6 +98,7 @@ export class OrderService {
         isDropOff: data.isDropOff,
 
         shippingCost: data.shippingCost || 0,
+        addCost: data.addCost || 0,
         totalAmount,
         grandTotal,
         notes: data.notes,
@@ -365,7 +366,8 @@ export class OrderService {
 
     // 7. Hitung grand total baru
     const shippingCost = data.shippingCost !== undefined ? data.shippingCost : order.shippingCost.toNumber();
-    const grandTotal = totalAmount + shippingCost;
+    const addCost = data.addCost !== undefined ? data.addCost : order.addCost.toNumber();
+    const grandTotal = totalAmount + shippingCost + addCost;
 
     // 8. Generate delivery number jika belum ada
     const deliveryNumber = order.deliveryNumber;
@@ -386,8 +388,9 @@ export class OrderService {
           isCod: data.isCod,
           isDropOff: data.isDropOff,
           shippingCost: shippingCost,
+          addCost: addCost,
           totalAmount: data.items ? totalAmount : undefined, // Update total jika items berubah
-          grandTotal: data.items || data.shippingCost !== undefined ? grandTotal : undefined,
+          grandTotal: data.items || data.shippingCost !== undefined || data.addCost !== undefined ? grandTotal : undefined,
           notes: data.notes,
           updatedBy: userId,
           updatedAt: new Date(),
@@ -461,6 +464,7 @@ export class OrderService {
       orderDate: order.orderDate,
       totalAmount: order.totalAmount.toNumber(),
       shippingCost: order.shippingCost.toNumber(),
+      addCost: order.addCost.toNumber(),
       grandTotal: order.grandTotal.toNumber(),
       status: order.status,
       notes: order.notes,
