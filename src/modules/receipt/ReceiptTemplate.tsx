@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   deliveryNumber: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
     letterSpacing: 0.5,
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   serviceText: {
-    fontSize: 7,
+    fontSize: 10,
     fontFamily: 'Helvetica-Bold',
   },
 
@@ -86,16 +86,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   label: {
-    fontSize: 7,
+    fontSize: 10,
     fontFamily: 'Helvetica-Bold',
     marginBottom: 3,
   },
   phoneText: {
-    fontSize: 6,
+    fontSize: 10,
     marginBottom: 3,
   },
   districtText: {
-    fontSize: 6,
+    fontSize: 10,
     fontFamily: 'Helvetica-Bold',
     textTransform: 'uppercase',
   },
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     borderBottom: '2px solid #000',
   },
   addressText: {
-    fontSize: 6,
+    fontSize: 9,
     lineHeight: 1.3,
     textTransform: 'uppercase',
   },
@@ -128,6 +128,11 @@ const styles = StyleSheet.create({
     borderBottom: '2px solid #000',
     justifyContent: 'center',
   },
+  codLabel: {
+    fontSize: 10,
+    textAlign: 'center',
+    marginTop: 4,
+  },
   codAmount: {
     fontSize: 14,
     fontFamily: 'Helvetica-Bold',
@@ -138,7 +143,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   codWeight: {
-    fontSize: 7,
+    fontSize: 10,
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
   },
@@ -169,12 +174,12 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   sectionTitle: {
-    fontSize: 7,
+    fontSize: 9,
     fontFamily: 'Helvetica-Bold',
     marginBottom: 4,
   },
   notesText: {
-    fontSize: 6,
+    fontSize: 10,
     lineHeight: 1.3,
   },
 
@@ -184,19 +189,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerTitle: {
-    fontSize: 7,
+    fontSize: 10,
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
     marginBottom: 4,
   },
   footerSubtitle: {
-    fontSize: 7,
+    fontSize: 10,
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
     marginBottom: 4,
   },
   footerDate: {
-    fontSize: 7,
+    fontSize: 10,
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
   },
@@ -221,7 +226,7 @@ export const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ data, qrCodeDa
         {/* Header dengan Logo */}
         <View style={styles.headerRow}>
           {logoUrl ? <Image src={logoUrl} style={styles.logoLeft} /> : <View style={{ width: 35 }} />}
-          <Text style={styles.headerCode}>MLG-SUB</Text>
+          {/* <Text style={styles.headerCode}>MLG-SUB</Text> */}
           {logoJntUrl ? <Image src={logoJntUrl} style={styles.logoRight} /> : <View style={{ width: 35 }} />}
         </View>
 
@@ -234,10 +239,10 @@ export const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ data, qrCodeDa
         {/* Service Code and Name */}
         <View style={styles.serviceRow}>
           <View style={styles.serviceCol}>
-            <Text style={styles.serviceText}>{data.orderNumber || 'SDS222606209'}</Text>
+            <Text style={styles.serviceText}>{data.orderNumber}</Text>
           </View>
           <View style={styles.serviceColLast}>
-            <Text style={styles.serviceText}>{data.serviceExpeditionName || '[EZ] - JNT-COD'}</Text>
+            <Text style={styles.serviceText}>{data.serviceExpeditionName}</Text>
           </View>
         </View>
 
@@ -264,7 +269,8 @@ export const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ data, qrCodeDa
         <View style={styles.codQrRow}>
           <View style={styles.codCol}>
             <View style={styles.codAmountWrapper}>
-              <Text style={styles.codAmount}>Rp. {data.codAmount.toLocaleString('id-ID')}</Text>
+              <Text style={styles.codAmount}>Rp. {data.isCod ? data.grandTotal.toLocaleString('id-ID') : 0}</Text>
+              <Text style={styles.codLabel}>{data.isCod ? 'COD' : 'NON-COD'}</Text>
             </View>
             <View style={styles.codWeightWrapper}>
               <Text style={styles.codWeight}>BERAT : {data.weight} KG</Text>
@@ -276,7 +282,7 @@ export const ReceiptTemplate: React.FC<ReceiptTemplateProps> = ({ data, qrCodeDa
         {/* Notes and Items List */}
         <View style={styles.notesItemsRow}>
           <View style={styles.notesCol}>
-            <Text style={styles.sectionTitle}>Catatan : {data.notes || 'dihubungi dahulu sebelum\npaket direturn.'}</Text>
+            <Text style={styles.sectionTitle}>Catatan : {data.notes || '-'}</Text>
           </View>
         </View>
 
