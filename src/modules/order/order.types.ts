@@ -4,7 +4,7 @@ import { OrderStatus } from '@prisma/client';
 
 export type CreateOrderDTO = z.infer<typeof orderSchemas.create>['body'];
 export type UpdateOrderDTO = z.infer<typeof orderSchemas.update>['body'];
-export type OrderQueryDTO = z.infer<typeof orderSchemas.queryParams>['query'];
+export type OrderQueryDTO = z.infer<typeof orderSchemas.queryParams>['body'];
 
 export interface OrderIdParamDTO {
   id: number;

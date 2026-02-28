@@ -4,19 +4,9 @@ import { responseTemplates, statusCodes } from '../../constants';
 import { OrderQueryDTO } from './order.types';
 
 export class OrderController {
-  static async getAll(_req: Request, res: Response) {
-    try {
-      const result = await OrderService.getAll();
-      return res.status(statusCodes.OK).json(responseTemplates.success(result, 'All orders retrieved successfully'));
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'An error occurred';
-      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json(responseTemplates.error(message));
-    }
-  }
-
   static async getPaginated(req: Request, res: Response) {
     try {
-      const result = await OrderService.getPaginated(req.query as unknown as OrderQueryDTO);
+      const result = await OrderService.getPaginated(req.body as OrderQueryDTO);
       return res.status(statusCodes.OK).json(responseTemplates.success(result, 'Orders retrieved successfully'));
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An error occurred';

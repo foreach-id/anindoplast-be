@@ -119,39 +119,57 @@ export class OrderService {
     return this.formatOrderResponse(newOrder);
   }
 
-  static async getAll() {
-    const orders = await prisma.order.findMany({
-      where: { deletedAt: null },
-      include: {
-        orderItems: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return orders.map((order) => this.formatOrderResponse(order));
-  }
-
   static async getPaginated(query: OrderQueryDTO) {
     // const skip = (page - 1) * limit;
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
-    const { search, status, customerId } = query;
+    const { search, status, paymentId, service, isCod, isDropOff, startDate, endDate } = query;
     const whereClause: Prisma.OrderWhereInput = {
       deletedAt: null,
     };
 
     if (search) {
-      // Search by order number, customer name (snapshot), or customer phone (snapshot)
-      whereClause.OR = [{ orderNumber: { contains: search } }, { customerName: { contains: search } }, { customerPhone: { contains: search } }];
+      // Search by order number, delivery number, customer name (snapshot), or customer phone (snapshot)
+      whereClause.OR = [
+        { orderNumber: { contains: search } },
+        { deliveryNumber: { contains: search } },
+        { customerName: { contains: search } },
+        { customerPhone: { contains: search } },
+      ];
     }
 
-    if (status) {
-      whereClause.status = status;
+    if (status && status.length > 0) {
+      whereClause.status = { in: status };
     }
 
-    if (customerId) {
-      whereClause.customerId = customerId;
+    if (paymentId && paymentId.length > 0) {
+      whereClause.paymentMethodId = { in: paymentId };
+    }
+
+    if (service && service.length > 0) {
+      whereClause.service = { in: service };
+    }
+
+    if (isCod !== undefined && isCod !== null) {
+      whereClause.isCod = isCod;
+    }
+
+    if (isDropOff !== undefined && isDropOff !== null) {
+      whereClause.isDropOff = isDropOff;
+    }
+
+    if (startDate || endDate) {
+      whereClause.orderDate = {};
+      if (startDate) {
+        whereClause.orderDate.gte = new Date(startDate);
+      }
+      if (endDate) {
+        // Set to end of day
+        const endDateTime = new Date(endDate);
+        endDateTime.setHours(23, 59, 59, 999);
+        whereClause.orderDate.lte = endDateTime;
+      }
     }
 
     const [data, total] = await prisma.$transaction([

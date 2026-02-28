@@ -64,21 +64,17 @@ export const orderSchemas = {
   }),
 
   queryParams: z.object({
-    query: z.object({
-      page: z
-        .string()
-        .optional()
-        .transform((val) => (val ? parseInt(val, 10) : 1)),
-      limit: z
-        .string()
-        .optional()
-        .transform((val) => (val ? parseInt(val, 10) : 10)),
+    body: z.object({
+      page: z.number().int().min(1).default(1),
+      limit: z.number().int().min(1).max(100).default(10),
       search: z.string().optional(),
-      status: z.enum(['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']).optional(),
-      customerId: z
-        .string()
-        .optional()
-        .transform((val) => (val ? parseInt(val, 10) : undefined)),
+      status: z.array(z.enum(['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'])).optional(),
+      paymentId: z.array(z.number().int()).optional(),
+      service: z.array(z.string()).optional(),
+      isCod: z.boolean().nullable().optional(),
+      isDropOff: z.boolean().nullable().optional(),
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
     }),
   }),
 };
