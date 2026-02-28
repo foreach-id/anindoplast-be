@@ -11,9 +11,7 @@ const router = Router();
 router.use(AuthMiddleware.authenticate);
 router.use(AuthMiddleware.authorize([UserRole.SUPER_ADMIN, UserRole.ADMIN]));
 
-router.get('/all', OrderController.getAll);
-
-router.get('/paginated', validate(orderSchemas.queryParams), OrderController.getPaginated);
+router.post('/paginated', validate(orderSchemas.queryParams), OrderController.getPaginated);
 
 router.get('/detail/:id', validate(orderSchemas.idParam), OrderController.getById);
 
