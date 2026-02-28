@@ -1,7 +1,8 @@
 export interface ReceiptData {
   deliveryNumber: string;
   orderNumber: string;
-  codAmount: number;
+  grandTotal: number;
+  isCod: boolean;
   recipient: {
     name: string;
     phone: string;
@@ -22,7 +23,6 @@ export interface ReceiptData {
   weight: number;
   orderDate: Date;
   notes?: string;
-  serviceExpeditionCode?: string;
   serviceExpeditionName?: string;
 }
 

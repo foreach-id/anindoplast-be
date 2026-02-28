@@ -27,7 +27,8 @@ export class ReceiptService {
       return {
         deliveryNumber: order.deliveryNumber || '',
         orderNumber: order.orderNumber || '',
-        codAmount: Number(order.grandTotal),
+        grandTotal: Number(order.grandTotal),
+        isCod: order.isCod,
         recipient: {
           name: order.customerName || '',
           phone: `${order.customerCountryCode || ''}${order.customerPhone || ''}`,
@@ -37,9 +38,9 @@ export class ReceiptService {
           province: order.customerProvince || '',
         },
         sender: {
-          name: 'Ferawani Store',
-          phone: '+6285271372389',
-          district: 'CIBEUNYING KALER',
+          name: process.env.SHIPPER_NAME || '',
+          phone: process.env.SHIPPER_PHONE || '',
+          district: process.env.SHIPPER_KECAMATAN_NAME || '',
         },
         items: order.orderItems.map((item: any) => ({
           name: item.productName,
@@ -48,8 +49,7 @@ export class ReceiptService {
         weight: totalWeight / 1000,
         orderDate: order.orderDate,
         notes: order.notes || '',
-        serviceExpeditionCode: order.service || 'SDS222606209',
-        serviceExpeditionName: order.serviceName || '[EZ] - JNT-COD',
+        serviceExpeditionName: order.serviceName || '',
       };
     });
   }
