@@ -62,6 +62,7 @@ export interface OrderResponseDTO {
   orderDate: Date;
   totalAmount: number;
   shippingCost: number;
+  addCost: number;
   grandTotal: number;
   status: OrderStatus;
   notes?: string | null;

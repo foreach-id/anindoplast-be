@@ -254,6 +254,7 @@ model Order {
   orderDate           DateTime         @default(now()) @map("order_date")
   totalAmount         Decimal          @db.Decimal(15, 2) @map("total_amount")
   shippingCost        Decimal          @default(0) @db.Decimal(15, 2) @map("shipping_cost")
+  addCost             Decimal          @default(0) @db.Decimal(15, 2) @map("add_cost")
   grandTotal          Decimal          @db.Decimal(15, 2) @map("grand_total")
   
   status              OrderStatus      @default(PENDING)
