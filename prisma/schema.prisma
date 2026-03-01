@@ -250,6 +250,7 @@ model Order {
   serviceType         String?          @map("service_type") @db.VarChar(255)
   isCod               Boolean          @default(false) @map("is_cod")
   isDropOff           Boolean          @default(false) @map("is_drop_off")
+  schedule            DateTime?        @map("schedule")
   
   orderDate           DateTime         @default(now()) @map("order_date")
   totalAmount         Decimal          @db.Decimal(15, 2) @map("total_amount")

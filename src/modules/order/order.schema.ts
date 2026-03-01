@@ -11,6 +11,7 @@ export const orderSchemas = {
       serviceType: z.string().optional(),
       isCod: z.boolean().default(false),
       isDropOff: z.boolean().default(false),
+      schedule: z.preprocess((val) => (typeof val === 'string' && val !== '' ? new Date(val) : val), z.date().optional()),
       shippingCost: z.number().min(0).default(0),
       addCost: z.number().default(0),
       notes: z.string().optional(),
@@ -32,29 +33,43 @@ export const orderSchemas = {
     params: z.object({
       id: z.string().transform((val) => parseInt(val, 10)),
     }),
-    body: z.object({
-      customerId: z.number().int().min(1, 'Customer is required').optional(),
-      customerAddressId: z.number().int().min(1, 'Customer address is required').optional(),
-      paymentMethodId: z.number().int().min(1, 'Payment method is required').optional(),
-      service: z.string().optional(),
-      serviceName: z.string().optional(),
-      serviceType: z.string().optional(),
-      isCod: z.boolean().optional(),
-      isDropOff: z.boolean().default(false),
-      shippingCost: z.number().min(0).optional(),
-      addCost: z.number().optional(),
-      notes: z.string().optional(),
-      items: z
-        .array(
-          z.object({
-            id: z.number().int().optional(),
-            productId: z.number().int().min(1, 'Product ID is required'),
-            quantity: z.number().int().min(1, 'Quantity must be at least 1'),
-            unitPrice: z.number().min(0, 'Unit price cannot be negative'),
-          }),
-        )
-        .optional(),
-    }),
+    body: z
+      .object({
+        customerId: z.number().int().min(1, 'Customer is required').optional(),
+        customerAddressId: z.number().int().min(1, 'Customer address is required').optional(),
+        paymentMethodId: z.number().int().min(1, 'Payment method is required').optional(),
+        service: z.string().optional(),
+        serviceName: z.string().optional(),
+        serviceType: z.string().optional(),
+        isCod: z.boolean().optional(),
+        isDropOff: z.boolean().default(false),
+        schedule: z.preprocess((val) => (typeof val === 'string' && val !== '' ? new Date(val) : val), z.date().optional()),
+        shippingCost: z.number().min(0).optional(),
+        addCost: z.number().optional(),
+        notes: z.string().optional(),
+        items: z
+          .array(
+            z.object({
+              id: z.number().int().optional(),
+              productId: z.number().int().min(1, 'Product ID is required'),
+              quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+              unitPrice: z.number().min(0, 'Unit price cannot be negative'),
+            }),
+          )
+          .optional(),
+      })
+      .refine(
+        (data) => {
+          if (data.isDropOff === false) {
+            return !!data.schedule;
+          }
+          return true;
+        },
+        {
+          message: 'Schedule wajib diisi jika bukan drop off',
+          path: ['schedule'],
+        },
+      ),
   }),
 
   idParam: z.object({
