@@ -2,31 +2,44 @@ import { z } from 'zod';
 
 export const orderSchemas = {
   create: z.object({
-    body: z.object({
-      customerId: z.number().int().min(1, 'Customer is required'),
-      customerAddressId: z.number().int().min(1, 'Customer address is required'),
-      paymentMethodId: z.number().int().min(1, 'Payment method is required'),
-      service: z.string().optional(),
-      serviceName: z.string().optional(),
-      serviceType: z.string().optional(),
-      isCod: z.boolean().default(false),
-      isDropOff: z.boolean().default(false),
-      schedule: z.preprocess((val) => (typeof val === 'string' && val !== '' ? new Date(val) : val), z.date().optional()),
-      shippingCost: z.number().min(0).default(0),
-      addCost: z.number().default(0),
-      notes: z.string().optional(),
+    body: z
+      .object({
+        customerId: z.number().int().min(1, 'Customer is required'),
+        customerAddressId: z.number().int().min(1, 'Customer address is required'),
+        paymentMethodId: z.number().int().min(1, 'Payment method is required'),
+        service: z.string().optional(),
+        serviceName: z.string().optional(),
+        serviceType: z.string().optional(),
+        isCod: z.boolean().default(false),
+        isDropOff: z.boolean().default(false),
+        schedule: z.preprocess((val) => (val === null ? undefined : typeof val === 'string' && val !== '' ? new Date(val) : val), z.date().optional()),
+        shippingCost: z.number().min(0).default(0),
+        addCost: z.number().default(0),
+        notes: z.string().optional(),
 
-      // Nested OrderItems
-      items: z
-        .array(
-          z.object({
-            productId: z.number().int().min(1, 'Product ID is required'),
-            quantity: z.number().int().min(1, 'Quantity must be at least 1'),
-            unitPrice: z.number().min(0, 'Unit price cannot be negative'),
-          }),
-        )
-        .min(1, 'Order must have at least 1 item'),
-    }),
+        // Nested OrderItems
+        items: z
+          .array(
+            z.object({
+              productId: z.number().int().min(1, 'Product ID is required'),
+              quantity: z.number().int().min(1, 'Quantity must be at least 1'),
+              unitPrice: z.number().min(0, 'Unit price cannot be negative'),
+            }),
+          )
+          .min(1, 'Order must have at least 1 item'),
+      })
+      .refine(
+        (data) => {
+          if (data.isDropOff === false) {
+            return !!data.schedule;
+          }
+          return true;
+        },
+        {
+          message: 'Schedule wajib diisi jika bukan drop off',
+          path: ['schedule'],
+        },
+      ),
   }),
 
   update: z.object({
@@ -43,7 +56,7 @@ export const orderSchemas = {
         serviceType: z.string().optional(),
         isCod: z.boolean().optional(),
         isDropOff: z.boolean().default(false),
-        schedule: z.preprocess((val) => (typeof val === 'string' && val !== '' ? new Date(val) : val), z.date().optional()),
+        schedule: z.preprocess((val) => (val === null ? undefined : typeof val === 'string' && val !== '' ? new Date(val) : val), z.date().optional()),
         shippingCost: z.number().min(0).optional(),
         addCost: z.number().optional(),
         notes: z.string().optional(),
