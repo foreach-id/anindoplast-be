@@ -96,6 +96,7 @@ export class OrderService {
         serviceType: data.serviceType,
         isCod: data.isCod,
         isDropOff: data.isDropOff,
+        schedule: data.schedule,
 
         shippingCost: data.shippingCost || 0,
         addCost: data.addCost || 0,
@@ -131,12 +132,7 @@ export class OrderService {
 
     if (search) {
       // Search by order number, delivery number, customer name (snapshot), or customer phone (snapshot)
-      whereClause.OR = [
-        { orderNumber: { contains: search } },
-        { deliveryNumber: { contains: search } },
-        { customerName: { contains: search } },
-        { customerPhone: { contains: search } },
-      ];
+      whereClause.OR = [{ orderNumber: { contains: search } }, { deliveryNumber: { contains: search } }, { customerName: { contains: search } }, { customerPhone: { contains: search } }];
     }
 
     if (status && status.length > 0) {
@@ -212,6 +208,11 @@ export class OrderService {
   }
 
   static async update(id: number, data: UpdateOrderDTO, userId: number | undefined) {
+    // Validasi schedule
+    if (data.isDropOff === false && !data.schedule) {
+      throw new Error('Schedule wajib diisi jika bukan drop off');
+    }
+
     // 1. Cek order exists
     const order = await prisma.order.findFirst({
       where: { id, deletedAt: null },
@@ -405,6 +406,7 @@ export class OrderService {
           ...serviceSnapshot, // Spread service fields (service, serviceName, serviceType)
           isCod: data.isCod,
           isDropOff: data.isDropOff,
+          schedule: data.schedule,
           shippingCost: shippingCost,
           addCost: addCost,
           totalAmount: data.items ? totalAmount : undefined, // Update total jika items berubah
@@ -479,6 +481,7 @@ export class OrderService {
       serviceType: order.serviceType,
       isCod: order.isCod,
       isDropOff: order.isDropOff,
+      schedule: order.schedule,
       orderDate: order.orderDate,
       totalAmount: order.totalAmount.toNumber(),
       shippingCost: order.shippingCost.toNumber(),

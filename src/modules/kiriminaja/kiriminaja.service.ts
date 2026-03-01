@@ -47,25 +47,6 @@ function getShipperConfig(): ShipperConfig {
   };
 }
 
-function generateSchedule(customSchedule?: string): string {
-  if (customSchedule) return customSchedule;
-  const now = new Date();
-  now.setTime(now.getTime() + 2 * 60 * 60 * 1000); // +2 jam
-
-  const formatter = new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'Asia/Jakarta',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
-
-  return formatter.format(now).replace('T', ' ');
-}
-
 export class KiriminAjaService {
   static async checkRate(dto: CheckRateDTO): Promise<CheckPricingResponse> {
     const response = await kiriminAjaClient.get<CheckPricingResponse>('/api/mitra/v2/check-price', {
@@ -155,7 +136,7 @@ export class KiriminAjaService {
     const packagePayload: KiriminAjaPackage = {
       order_id: order.orderNumber,
       destination_name: order.customerName ?? '',
-      destination_phone: `${order.customerCountryCode ?? ''}${order.customerPhone ?? ''}`,
+      destination_phone: order.customerPhone ?? '',
       destination_address: order.customerAddressFull ?? '',
       destination_kecamatan_id: customerAddress.districtId,
       destination_kelurahan_id: customerAddress.subDistrictId,
@@ -183,7 +164,11 @@ export class KiriminAjaService {
       kecamatan_id: shipper.kecamatan_id,
       kelurahan_id: shipper.kelurahan_id,
       zipcode: shipper.zipcode,
-      schedule: generateSchedule(dto.schedule),
+      schedule: order.schedule
+        ? typeof order.schedule === 'string'
+          ? order.schedule
+          : `${order.schedule.getUTCFullYear()}-${String(order.schedule.getUTCMonth() + 1).padStart(2, '0')}-${String(order.schedule.getUTCDate()).padStart(2, '0')} ${String(order.schedule.getUTCHours()).padStart(2, '0')}:${String(order.schedule.getUTCMinutes()).padStart(2, '0')}:${String(order.schedule.getUTCSeconds()).padStart(2, '0')}`
+        : '',
       packages: [packagePayload],
     };
 
