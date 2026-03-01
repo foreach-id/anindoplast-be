@@ -96,7 +96,7 @@ export class OrderService {
         serviceType: data.serviceType,
         isCod: data.isCod,
         isDropOff: data.isDropOff,
-        schedule: data.schedule,
+        schedule: data.schedule ? new Date(data.schedule) : undefined,
 
         shippingCost: data.shippingCost || 0,
         addCost: data.addCost || 0,
@@ -406,7 +406,7 @@ export class OrderService {
           ...serviceSnapshot, // Spread service fields (service, serviceName, serviceType)
           isCod: data.isCod,
           isDropOff: data.isDropOff,
-          schedule: data.schedule,
+          schedule: data.schedule ? new Date(data.schedule) : undefined,
           shippingCost: shippingCost,
           addCost: addCost,
           totalAmount: data.items ? totalAmount : undefined, // Update total jika items berubah
